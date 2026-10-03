@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -29,15 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.MediaItem
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
-import com.winter.core.AudioItem
-import com.winter.core.ExoplayerManager
+import androidx.media3.session.MediaController
 import com.winter.wplayer.ui.theme.WPlayerTheme
-import com.winter.core.MusicViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlin.jvm.Throws
 
 
 class MainActivity : ComponentActivity() {
@@ -45,13 +38,15 @@ class MainActivity : ComponentActivity() {
     companion object{
         private const val TAG = "MainActivity"
     }
-    lateinit var exoManager: ExoplayerManager
-    val musicViewModel by lazy { MusicViewModel(this.applicationContext as Application) }
-    //private var songIndex = 0
 
+
+    val musicListViewModel by lazy { MusicListViewModel(this.applicationContext as Application) }
+    val musicPlayerViewModel by lazy { MusicPlayerViewModel(this.applicationContext as Application) }
+
+
+    @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        exoManager = ExoplayerManager(this)
 
         enableEdgeToEdge()
         setContent {
@@ -65,22 +60,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     @OptIn(UnstableApi::class)
     @Composable
     fun PlayList(modifier: Modifier){
-        val songs by musicViewModel.songs.collectAsStateWithLifecycle()
+        val songs by musicListViewModel.songs.collectAsStateWithLifecycle()
+        val items by musicListViewModel.medias.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
-            musicViewModel.loadSongs()
+            musicListViewModel.loadSongs()
+            musicListViewModel.loadMediaItemsIfLoaded()
         }
 
         LazyColumn(modifier) {
             itemsIndexed(songs) { index, song ->
                 Text(modifier = Modifier.clickable{
-                    //songIndex = index
-                    //Log.d(TAG,"${songIndex}")
-                    exoManager.play(MediaItem.fromUri(song.uri))
+
                 },
                     text ="${song.title} - ${song.artist}")
 
@@ -88,25 +82,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    //fun getIndexItem(list: List<AudioItem>, count: Int): AudioItem?{
-    //    return list.getOrNull(songIndex + count)
-    //}
 
     @OptIn(UnstableApi::class)
     @Composable
     fun PlayBar(modifier: Modifier){
-        val songs by musicViewModel.songs.collectAsStateWithLifecycle()
+        val songs by musicListViewModel.songs.collectAsStateWithLifecycle()
+        val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
         Row(modifier){
             Button(
                 onClick = {
-                    //val item = getIndexItem(songs,-1)
-                    //if (item != null){
-                        //songIndex - 1
-                        //Log.d(TAG,"${songIndex}")
-                        //exoManager.play(MediaItem.fromUri(item.uri))
-                    //} else {
-                    //    exoManager.pause()
-                    //}
+                    controller?.apply {
+                        if (hasPreviousMediaItem()) seekToPrevious()
+                    }
                 }
             ) {
                 Icon(
@@ -116,11 +103,9 @@ class MainActivity : ComponentActivity() {
             }
             Button(
                 onClick = {
-                    val state = exoManager.getState()
-                    if (state == ExoplayerManager.PlayerState.PLAYING) {
-                        exoManager.pause()
-                    } else {
-                        exoManager.play()
+                    controller?.apply {
+                        if (isPlaying) pause()
+                        else play()
                     }
                 },
                 shape = CircleShape
@@ -132,12 +117,9 @@ class MainActivity : ComponentActivity() {
             }
             Button(
                 onClick = {
-                    //val item = getIndexItem(songs, 1)
-                    //if (item != null){
-                    //    songIndex + 1
-                    //    Log.d(TAG,"${songIndex}")
-                    //    exoManager.play(MediaItem.fromUri(item.uri))
-                    //}
+                    controller?.apply {
+                        if (hasNextMediaItem()) seekToNext()
+                    }
                 }
             ) {
                 Icon(

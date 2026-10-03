@@ -1,4 +1,4 @@
-package com.winter.core
+package com.winter.wplayer
 
 import android.content.ContentUris
 import android.content.Context

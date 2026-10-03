@@ -1,4 +1,4 @@
-package com.winter.core
+package com.winter.wplayer
 
 import android.app.Application
 import android.content.ComponentName
@@ -15,7 +15,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.launch
 
 
-class MusicViewModel(app: Application): AndroidViewModel(app) {
+class MusicListViewModel(app: Application): AndroidViewModel(app) {
     private val _songs = MutableStateFlow<List<AudioItem>>(emptyList())
     val songs: StateFlow<List<AudioItem>> = _songs.asStateFlow()
 
@@ -24,26 +24,6 @@ class MusicViewModel(app: Application): AndroidViewModel(app) {
 
     private var _loaded = false
 
-    private val _controller = MutableStateFlow<MediaController?>(null)
-    val controller = _controller.asStateFlow()
-
-    init {
-        connect()
-    }
-    private fun connect() {
-        val context = getApplication<Application>()
-        val sessionToken = SessionToken(context, ComponentName(context, Playback))
-        val future = MediaController.Builder(context, sessionToken).buildAsync()
-        future.addListener({
-            _controller.value = future.get()
-        }, MoreExecutors.directExecutor())
-    }
-
-    override fun onCleared() {
-        _controller.value?.release()
-        _controller.value = null
-        super.onCleared()
-    }
     fun loadSongs() {
         viewModelScope.launch{
             val list = Searcher(getApplication()).queryAudioList(application)
