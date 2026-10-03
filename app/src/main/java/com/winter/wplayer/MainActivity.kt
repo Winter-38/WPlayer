@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.OptIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,18 +30,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.Log
+import androidx.media3.common.util.UnstableApi
 import com.winter.core.AudioItem
 import com.winter.core.ExoplayerManager
 import com.winter.wplayer.ui.theme.WPlayerTheme
 import com.winter.core.MusicViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.jvm.Throws
 
 
 class MainActivity : ComponentActivity() {
 
+    companion object{
+        private const val TAG = "MainActivity"
+    }
     lateinit var exoManager: ExoplayerManager
     val musicViewModel by lazy { MusicViewModel(this.applicationContext as Application) }
-    var songIndex = 0
+    //private var songIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +66,7 @@ class MainActivity : ComponentActivity() {
     }
 
 
-
+    @OptIn(UnstableApi::class)
     @Composable
     fun PlayList(modifier: Modifier){
         val songs by musicViewModel.songs.collectAsStateWithLifecycle()
@@ -71,7 +78,8 @@ class MainActivity : ComponentActivity() {
         LazyColumn(modifier) {
             itemsIndexed(songs) { index, song ->
                 Text(modifier = Modifier.clickable{
-                    songIndex = index
+                    //songIndex = index
+                    //Log.d(TAG,"${songIndex}")
                     exoManager.play(MediaItem.fromUri(song.uri))
                 },
                     text ="${song.title} - ${song.artist}")
@@ -80,19 +88,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    //fun getIndexItem(list: List<AudioItem>, count: Int): AudioItem?{
+    //    return list.getOrNull(songIndex + count)
+    //}
+
+    @OptIn(UnstableApi::class)
     @Composable
     fun PlayBar(modifier: Modifier){
         val songs by musicViewModel.songs.collectAsStateWithLifecycle()
-        val item by remember { mutableStateOf(songs.getOrNull(songIndex)) }
         Row(modifier){
             Button(
                 onClick = {
-                    val itemF = item
-                    if (itemF != null) {
-                        exoManager.play(MediaItem.fromUri(itemF.uri))
-                    } else {
-                        exoManager.pause()
-                    }
+                    //val item = getIndexItem(songs,-1)
+                    //if (item != null){
+                        //songIndex - 1
+                        //Log.d(TAG,"${songIndex}")
+                        //exoManager.play(MediaItem.fromUri(item.uri))
+                    //} else {
+                    //    exoManager.pause()
+                    //}
                 }
             ) {
                 Icon(
@@ -118,7 +132,12 @@ class MainActivity : ComponentActivity() {
             }
             Button(
                 onClick = {
-                    TODO("skip next")
+                    //val item = getIndexItem(songs, 1)
+                    //if (item != null){
+                    //    songIndex + 1
+                    //    Log.d(TAG,"${songIndex}")
+                    //    exoManager.play(MediaItem.fromUri(item.uri))
+                    //}
                 }
             ) {
                 Icon(

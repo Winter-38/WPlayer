@@ -6,19 +6,18 @@ import androidx.lifecycle.application
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlin.collections.mutableListOf
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
 
 class MusicViewModel(app: Application): AndroidViewModel(app) {
-    private val _songs = MutableStateFlow<List<AudioItem>>(emptyList())
+    private val _songs = MutableStateFlow<ObservableList<AudioItem>>()
     val songs: StateFlow<List<AudioItem>> = _songs.asStateFlow()
 
     private var _loaded = MutableStateFlow(false)
     val loaded: StateFlow<Boolean> = _loaded.asStateFlow()
 
-    private var _index = MutableStateFlow(0)
-    var index: StateFlow<Int> = _index.asStateFlow()
 
     fun loadSongs(){
         viewModelScope.launch{
