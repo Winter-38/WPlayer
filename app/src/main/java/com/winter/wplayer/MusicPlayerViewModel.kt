@@ -9,6 +9,7 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.guava.await
 
 class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     private val _controller = MutableStateFlow<MediaController?>(null)
@@ -16,17 +17,13 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     private val _isReady = MutableStateFlow(false)
     val isReady = _isReady.asStateFlow()
 
-    init {
-        connect()
-    }
-    private fun connect() {
+
+    suspend fun buildController() {
         val context = getApplication<Application>()
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, sessionToken).buildAsync()
-        future.addListener({
-            _controller.value = future.get()
-            _isReady.value = true
-        }, MoreExecutors.directExecutor())
+        _controller.value = future.await()
+        _isReady.value = true
     }
 
     fun play(mediaItem: MediaItem) {

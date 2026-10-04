@@ -3,14 +3,16 @@ package com.winter.wplayer
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import android.util.Log
 
 class PlaybackService: MediaSessionService() {
     private var mediaSession: MediaSession? = null
     private val player: ExoPlayer by lazy { ExoPlayer.Builder(this).build() }
-
+    private val TAG = "Service"
     override fun onCreate() {
         super.onCreate()
         mediaSession = MediaSession.Builder(this, player).build()
+        Log.d(TAG, "service started")
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {

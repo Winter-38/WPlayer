@@ -2,6 +2,7 @@ package com.winter.wplayer
 
 import android.app.Application
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -36,7 +37,7 @@ import com.winter.wplayer.ui.theme.WPlayerTheme
 class MainActivity : ComponentActivity() {
 
     companion object{
-        private const val TAG = "MainActivity"
+        private const val TAG = "MainActivityAction"
     }
 
 
@@ -65,19 +66,31 @@ class MainActivity : ComponentActivity() {
     fun PlayList(modifier: Modifier){
         val songs by musicListViewModel.songs.collectAsStateWithLifecycle()
         val items by musicListViewModel.medias.collectAsStateWithLifecycle()
+        val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
             musicListViewModel.loadSongs()
             musicListViewModel.loadMediaItemsIfLoaded()
+            musicPlayerViewModel.buildController()
+        }
+
+        LaunchedEffect(musicPlayerViewModel.isReady, items, controller) {
+            controller?.setMediaItems(items, 0, 0)
+            controller?.prepare()
+            Log.d(TAG, "列表长度${controller?.mediaItemCount}")
         }
 
         LazyColumn(modifier) {
             itemsIndexed(songs) { index, song ->
                 Text(modifier = Modifier.clickable{
-
+                    if (controller != null) {
+                        controller?.run {
+                            seekTo(index, 0L)
+                            play()
+                        }
+                    }
                 },
                     text ="${song.title} - ${song.artist}")
-
             }
         }
     }
@@ -86,7 +99,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(UnstableApi::class)
     @Composable
     fun PlayBar(modifier: Modifier){
-        val songs by musicListViewModel.songs.collectAsStateWithLifecycle()
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
         Row(modifier){
             Button(
