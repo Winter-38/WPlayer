@@ -70,21 +70,23 @@ class MainActivity : ComponentActivity() {
 
         LaunchedEffect(Unit) {
             musicListViewModel.loadSongs()
-            musicListViewModel.loadMediaItemsIfLoaded()
+            musicListViewModel.loadMediaItems()
             musicPlayerViewModel.buildController()
+            Log.d(TAG, "when launch, items count:${items.count()}")
         }
 
         LaunchedEffect(musicPlayerViewModel.isReady, items, controller) {
-            controller?.setMediaItems(items, 0, 0)
-            controller?.prepare()
-            Log.d(TAG, "列表长度${controller?.mediaItemCount}")
+            if (controller != null) {
+                controller?.setMediaItems(items, 0, 0)
+                controller?.prepare()
+            }
         }
 
         LazyColumn(modifier) {
             itemsIndexed(songs) { index, song ->
                 Text(modifier = Modifier.clickable{
                     if (controller != null) {
-                        controller?.run {
+                        controller?.apply {
                             seekTo(index, 0L)
                             play()
                         }

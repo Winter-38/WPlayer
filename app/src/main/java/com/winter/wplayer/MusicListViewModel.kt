@@ -1,7 +1,8 @@
 package com.winter.wplayer
 
 import android.app.Application
-import android.content.ComponentName
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,9 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
-import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 
@@ -20,27 +21,22 @@ class MusicListViewModel(app: Application): AndroidViewModel(app) {
     val songs: StateFlow<List<AudioItem>> = _songs.asStateFlow()
 
     private val _medias = MutableStateFlow<List<MediaItem>>(emptyList())
-    val medias = _medias.asStateFlow()
+    val medias: StateFlow<List<MediaItem>> = _medias.asStateFlow()
 
-    private var _loaded = false
-
+    val searcher: Searcher = Searcher(app)
+    private val TAG = "MusicListViewModel"
     fun loadSongs() {
+        if (_songs.value.isNotEmpty()) return
         viewModelScope.launch{
-            val list = Searcher(getApplication()).queryAudioList(application)
+            val list = searcher.queryAudioList(application)
             _songs.value = list
-            _loaded = true
         }
     }
+
 
     fun loadMediaItems() {
         viewModelScope.launch {
-            val list = Searcher(getApplication()).queryMediaList(application)
-            _medias.value = list
-        }
-    }
-
-    fun loadMediaItemsIfLoaded() {
-        if (_loaded && _songs.value.isNotEmpty()) {
+            val list = _songs.filter { it.isNotEmpty() }.first()
             _medias.value = _songs.value.map { MediaItem.fromUri(it.uri) }
         }
     }
