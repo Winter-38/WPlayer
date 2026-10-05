@@ -5,6 +5,7 @@ import android.net.Uri
 data class AudioItem (
     val id: Long,
     val uri: Uri,
+    val coverUri: Uri?,
     val title: String,
     val album: String,
     val artist: String,

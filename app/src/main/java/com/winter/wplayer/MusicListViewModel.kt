@@ -1,8 +1,6 @@
 package com.winter.wplayer
 
 import android.app.Application
-import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,7 +10,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 
@@ -23,7 +20,7 @@ class MusicListViewModel(app: Application): AndroidViewModel(app) {
     private val _medias = MutableStateFlow<List<MediaItem>>(emptyList())
     val medias: StateFlow<List<MediaItem>> = _medias.asStateFlow()
 
-    val searcher: Searcher = Searcher(app)
+    private val searcher: Searcher = Searcher(app)
     private val TAG = "MusicListViewModel"
     fun loadSongs() {
         if (_songs.value.isNotEmpty()) return

@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -28,9 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.MediaController
+import coil3.compose.AsyncImage
 import com.winter.wplayer.ui.theme.WPlayerTheme
 
 
@@ -43,6 +45,7 @@ class MainActivity : ComponentActivity() {
 
     val musicListViewModel by lazy { MusicListViewModel(this.applicationContext as Application) }
     val musicPlayerViewModel by lazy { MusicPlayerViewModel(this.applicationContext as Application) }
+    private var songIndex = mutableStateOf(0)
 
 
     @OptIn(UnstableApi::class)
@@ -72,7 +75,6 @@ class MainActivity : ComponentActivity() {
             musicListViewModel.loadSongs()
             musicListViewModel.loadMediaItems()
             musicPlayerViewModel.buildController()
-            Log.d(TAG, "when launch, items count:${items.count()}")
         }
 
         LaunchedEffect(musicPlayerViewModel.isReady, items, controller) {
@@ -90,6 +92,7 @@ class MainActivity : ComponentActivity() {
                             seekTo(index, 0L)
                             play()
                         }
+                        songIndex.value = index
                     }
                 },
                     text ="${song.title} - ${song.artist}")
@@ -102,7 +105,17 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun PlayBar(modifier: Modifier){
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+        val items by musicListViewModel.songs.collectAsStateWithLifecycle()
+        val coverUri = items.getOrNull(songIndex.value)?.coverUri ?: R.drawable.ic_play_outline
+
         Row(modifier){
+            AsyncImage(
+                model = coverUri,
+                contentDescription = "cover of the playing song",
+                modifier = Modifier.size(80.dp)
+            )
+
+            //seekToPrevious Button
             Button(
                 onClick = {
                     controller?.apply {
@@ -115,6 +128,8 @@ class MainActivity : ComponentActivity() {
                     contentDescription = "skip to previous song"
                 )
             }
+
+            //(stop/play) button
             Button(
                 onClick = {
                     controller?.apply {
@@ -129,6 +144,8 @@ class MainActivity : ComponentActivity() {
                     contentDescription = "play_button"
                 )
             }
+
+            //seekToNext Button
             Button(
                 onClick = {
                     controller?.apply {
