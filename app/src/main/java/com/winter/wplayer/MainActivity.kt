@@ -1,22 +1,36 @@
 package com.winter.wplayer
 
+import android.Manifest
+import android.app.AlertDialog
 import android.app.Application
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -26,14 +40,25 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontVariation.Settings
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import coil3.compose.AsyncImage
+import com.winter.wplayer.ui.theme.ListBackgroundColor
+import com.winter.wplayer.ui.theme.ListBorderColor
 import com.winter.wplayer.ui.theme.WPlayerTheme
+import java.nio.file.WatchEvent
 
 
 class MainActivity : ComponentActivity() {
@@ -86,21 +111,45 @@ class MainActivity : ComponentActivity() {
 
         LazyColumn(modifier) {
             itemsIndexed(songs) { index, song ->
-                Text(modifier = Modifier.clickable{
-                    if (controller != null) {
-                        controller?.apply {
-                            seekTo(index, 0L)
-                            play()
-                        }
-                        songIndex.value = index
-                    }
-                },
-                    text ="${song.title} - ${song.artist}")
+                Row(
+                    modifier = Modifier
+                        .height(60.dp)
+                        .fillMaxWidth()
+                        .background(
+                            color = ListBackgroundColor,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            width = 3.dp,
+                            color = ListBorderColor,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    AsyncImage(
+                        model = songs.get(index).coverUri,
+                        contentDescription = "cover of each songs",
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        modifier = Modifier
+                            .clickable {
+                            if (controller != null) {
+                                controller?.apply {
+                                    seekTo(index, 0L)
+                                    play()
+                                }
+                                songIndex.value = index
+                            }
+                        },
+                        text = "${song.title} - ${song.artist}"
+                    )
+                }
             }
         }
     }
-
-
     @OptIn(UnstableApi::class)
     @Composable
     fun PlayBar(modifier: Modifier){
@@ -109,13 +158,17 @@ class MainActivity : ComponentActivity() {
         val coverUri = items.getOrNull(songIndex.value)?.coverUri ?: R.drawable.ic_play_outline
 
         Row(modifier){
+            Spacer(modifier = Modifier.width(16.dp))
             AsyncImage(
                 model = coverUri,
                 contentDescription = "cover of the playing song",
-                modifier = Modifier.size(80.dp)
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
             )
-
-            //seekToPrevious Button
+            Spacer(modifier = Modifier.width(16.dp))
+            //seek to previous
             Button(
                 onClick = {
                     controller?.apply {
@@ -162,51 +215,85 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun RequestPermission(){
+    fun RequestPermission(
+        onPermissionsGranted: () -> Unit = {}
+    ) {
+        val context = LocalContext.current
         var showDialog by remember { mutableStateOf(false) }
+        var hasRequested by rememberSaveable { mutableStateOf(false) }
+
+        // 根据 API 级别构建权限列表
+        val audioPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_AUDIO
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+        val permissionsToRequest = remember { arrayOf(audioPermission) }
 
         val permissionLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
-            if (permissions.values.all { it }) {
+            val allGranted = permissions.values.all { it }
+            if (allGranted) {
                 showDialog = false
+                onPermissionsGranted()
             } else {
                 showDialog = true
             }
         }
 
-        if (showDialog){
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = {},
-                title = { Text("permission request") },
-                text = { Text( "PLEASE give me the permission") },
+        // 首次显示此 composable 时触发请求
+        LaunchedEffect(Unit) {
+            if (!hasRequested) {
+                hasRequested = true
+                val allGranted = permissionsToRequest.all {
+                    ContextCompat.checkSelfPermission(context, it) ==
+                            PackageManager.PERMISSION_GRANTED
+                }
+                if (allGranted) {
+                    onPermissionsGranted()
+                } else {
+                    permissionLauncher.launch(permissionsToRequest)
+                }
+            }
+        }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("需要权限") },
+                text = { Text("此应用需要该权限才能继续运行") },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            showDialog = false
-                            permissionLauncher.launch(arrayOf(
-                                android.Manifest.permission.READ_MEDIA_AUDIO,
-                                android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                                android.Manifest.permission.FOREGROUND_SERVICE,
-                                android.Manifest.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK
-                            ))
-                        }) {
-                        Text("confirm")
+                    TextButton(onClick = {
+                        showDialog = false
+                        val allGranted = permissionsToRequest.all {
+                            ContextCompat.checkSelfPermission(context, it) ==
+                                    PackageManager.PERMISSION_GRANTED
+                        }
+                        if (allGranted) {
+                            onPermissionsGranted()
+                        } else {
+                            // 如果系统不再弹窗，直接跳转到应用设置页
+                            val intent = Intent(
+                                android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", context.packageName, null)
+                            )
+                            context.startActivity(intent)
+                        }
+                    }) {
+                        Text("确认")
                     }
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showDialog = false
-                        }
-                    ) {
-                        Text("dismiss")
+                    TextButton(onClick = { showDialog = false }) {
+                        Text("取消")
                     }
                 }
             )
         }
     }
 }
+
 
 
 
