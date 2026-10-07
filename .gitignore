@@ -9,3 +9,4 @@
 /.codewhale
 *.jks
 *.keystore
+local.properties
