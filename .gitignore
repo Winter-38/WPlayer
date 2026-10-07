@@ -1,13 +1,12 @@
 *.iml
 .gradle
-/.idea/
+.idea/
 .DS_Store
 /build
 /captures
 .externalNativeBuild
 .cxx
-/.codewhale
+.codewhale/
 *.jks
 *.keystore
 local.properties
-/.codewhale/
