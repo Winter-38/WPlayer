@@ -1,7 +1,6 @@
 package com.winter.wplayer
 
 import android.Manifest
-import android.app.AlertDialog
 import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -17,7 +16,6 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +36,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,8 +47,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontVariation.Settings
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,7 +55,6 @@ import coil3.compose.AsyncImage
 import com.winter.wplayer.ui.theme.ListBackgroundColor
 import com.winter.wplayer.ui.theme.ListBorderColor
 import com.winter.wplayer.ui.theme.WPlayerTheme
-import java.nio.file.WatchEvent
 
 
 class MainActivity : ComponentActivity() {
@@ -70,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
     val musicListViewModel by lazy { MusicListViewModel(this.applicationContext as Application) }
     val musicPlayerViewModel by lazy { MusicPlayerViewModel(this.applicationContext as Application) }
-    private var songIndex = mutableStateOf(0)
+    private var songIndex = mutableIntStateOf(0)
 
 
     @OptIn(UnstableApi::class)
@@ -132,6 +128,7 @@ class MainActivity : ComponentActivity() {
                         contentDescription = "cover of each songs",
                         modifier = Modifier.size(40.dp)
                     )
+
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         modifier = Modifier
@@ -141,7 +138,7 @@ class MainActivity : ComponentActivity() {
                                     seekTo(index, 0L)
                                     play()
                                 }
-                                songIndex.value = index
+                                songIndex.intValue = index
                             }
                         },
                         text = "${song.title} - ${song.artist}"
@@ -155,7 +152,7 @@ class MainActivity : ComponentActivity() {
     fun PlayBar(modifier: Modifier){
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
         val items by musicListViewModel.songs.collectAsStateWithLifecycle()
-        val coverUri = items.getOrNull(songIndex.value)?.coverUri ?: R.drawable.ic_play_outline
+        val coverUri = items.getOrNull(songIndex.intValue)?.coverUri ?: R.drawable.ic_play_outline
 
         Row(modifier){
             Spacer(modifier = Modifier.width(16.dp))
@@ -174,6 +171,7 @@ class MainActivity : ComponentActivity() {
                     controller?.apply {
                         if (hasPreviousMediaItem()) seekToPrevious()
                     }
+                    songIndex.intValue += 1
                 }
             ) {
                 Icon(
@@ -204,6 +202,7 @@ class MainActivity : ComponentActivity() {
                     controller?.apply {
                         if (hasNextMediaItem()) seekToNext()
                     }
+                    songIndex.intValue += 1
                 }
             ) {
                 Icon(
@@ -222,7 +221,6 @@ class MainActivity : ComponentActivity() {
         var showDialog by remember { mutableStateOf(false) }
         var hasRequested by rememberSaveable { mutableStateOf(false) }
 
-        // 根据 API 级别构建权限列表
         val audioPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_AUDIO
         } else {
@@ -242,7 +240,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // 首次显示此 composable 时触发请求
         LaunchedEffect(Unit) {
             if (!hasRequested) {
                 hasRequested = true
@@ -273,7 +270,6 @@ class MainActivity : ComponentActivity() {
                         if (allGranted) {
                             onPermissionsGranted()
                         } else {
-                            // 如果系统不再弹窗，直接跳转到应用设置页
                             val intent = Intent(
                                 android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                                 Uri.fromParts("package", context.packageName, null)

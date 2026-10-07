@@ -1,3 +1,11 @@
+import java.util.Properties
+
+val keystoreProperties = Properties().apply {
+    val propFile = rootProject.file("local.properties")
+    if (propFile.exists()) {
+        propFile.inputStream().use { load(it) }
+    }
+}
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -19,11 +27,18 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+        }
+    }
+
     buildTypes {
-        release {
-            optimization {
-                enable = false
-            }
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
