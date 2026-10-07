@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -66,7 +68,6 @@ class MainActivity : ComponentActivity() {
 
     val musicListViewModel by lazy { MusicListViewModel(this.applicationContext as Application) }
     val musicPlayerViewModel by lazy { MusicPlayerViewModel(this.applicationContext as Application) }
-    private var songIndex = mutableIntStateOf(0)
 
 
     @OptIn(UnstableApi::class)
@@ -138,12 +139,12 @@ class MainActivity : ComponentActivity() {
                                     seekTo(index, 0L)
                                     play()
                                 }
-                                songIndex.intValue = index
                             }
                         },
                         text = "${song.title} - ${song.artist}"
                     )
                 }
+                Spacer(modifier = Modifier.padding(2.dp))
             }
         }
     }
@@ -152,7 +153,8 @@ class MainActivity : ComponentActivity() {
     fun PlayBar(modifier: Modifier){
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
         val items by musicListViewModel.songs.collectAsStateWithLifecycle()
-        val coverUri = items.getOrNull(songIndex.intValue)?.coverUri ?: R.drawable.ic_play_outline
+        val songIndex by musicPlayerViewModel.songIndex.collectAsStateWithLifecycle()
+        val coverUri = items.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
 
         Row(modifier){
             Spacer(modifier = Modifier.width(16.dp))
@@ -164,14 +166,14 @@ class MainActivity : ComponentActivity() {
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            //
+            Spacer(modifier = Modifier.width(20.dp))
             //seek to previous
             Button(
                 onClick = {
                     controller?.apply {
                         if (hasPreviousMediaItem()) seekToPrevious()
                     }
-                    songIndex.intValue += 1
                 }
             ) {
                 Icon(
@@ -202,7 +204,6 @@ class MainActivity : ComponentActivity() {
                     controller?.apply {
                         if (hasNextMediaItem()) seekToNext()
                     }
-                    songIndex.intValue += 1
                 }
             ) {
                 Icon(

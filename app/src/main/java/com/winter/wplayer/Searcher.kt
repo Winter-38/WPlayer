@@ -27,7 +27,7 @@ class Searcher(context: Context) {
             projection,
             selection,
             null,
-            "${MediaStore.Audio.Media.TITLE} ASC"
+            "${MediaStore.Audio.Media.DURATION} ASC"
         )
 
 
