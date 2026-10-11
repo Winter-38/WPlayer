@@ -1,15 +1,18 @@
 package com.winter.wplayer
 
 import android.content.Context
+import android.net.Uri
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 
-@Database(entities = [AudioItem::class], version = 1, exportSchema = false)
+
+@Database(entities = [Song::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDataBase: RoomDatabase() {
-    abstract fun audioDao(): AudioDao
+    abstract fun audioDao(): SongDuo
 
     companion object {
         @Volatile private var INSTANCE: AppDataBase? = null
@@ -26,4 +29,12 @@ abstract class AppDataBase: RoomDatabase() {
             }
         }
     }
+}
+
+class Converters {
+    @TypeConverter
+    fun fromUri(uri: Uri?): String? = uri?.toString()
+
+    @TypeConverter
+    fun toUri(string: String?): Uri? = string.let { Uri.parse(it) }
 }

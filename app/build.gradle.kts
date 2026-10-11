@@ -66,6 +66,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.11.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
     implementation("io.coil-kt.coil3:coil-compose:3.6.2")
     implementation("androidx.datastore:datastore-preferences:1.2.1")
     implementation("androidx.room:room-runtime:2.8.5")

@@ -8,14 +8,29 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.collections.emptyList
 
 
 class MusicListViewModel(app: Application): AndroidViewModel(app) {
-    private val _songs = MutableStateFlow<List<AudioItem>>(emptyList())
-    val songs: StateFlow<List<AudioItem>> = _songs.asStateFlow()
+    private val _songs = MutableStateFlow<List<Song>>(emptyList())
+    private val database = AppDataBase.get(application)
+    private val audioDao = database.audioDao()
+
+    val audioLists: StateFlow<List<Song>> = audioDao
+        .getAll()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+
+    val songs: StateFlow<List<Song>> = _songs.asStateFlow()
 
     private val _medias = MutableStateFlow<List<MediaItem>>(emptyList())
     val medias: StateFlow<List<MediaItem>> = _medias.asStateFlow()

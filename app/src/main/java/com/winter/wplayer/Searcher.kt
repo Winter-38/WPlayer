@@ -8,7 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class Searcher(context: Context) {
-    val audioList = mutableListOf<AudioItem>()
+    val audioList = mutableListOf<Song>()
 
     val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.DURATION} > 10000"
 
@@ -21,7 +21,7 @@ class Searcher(context: Context) {
         MediaStore.Audio.Media.DURATION
     )
 
-    suspend public fun queryAudioList(context: Context): List<AudioItem> = withContext(Dispatchers.IO) {
+    suspend public fun queryAudioList(context: Context): List<Song> = withContext(Dispatchers.IO) {
         val cursor = context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             projection,
@@ -49,7 +49,7 @@ class Searcher(context: Context) {
                     Uri.parse("content://media/external/audio/albumart"),coverId
                 )
                 audioList.add(
-                    AudioItem(
+                    Song(
                         id = id,
                         uri = uri,
                         coverUri = coverUri,
