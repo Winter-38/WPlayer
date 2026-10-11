@@ -8,7 +8,7 @@ import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface SongDuo {
+interface SongDao {
     @Query("SELECT * FROM songs")
     fun getAll(): Flow<List<Song>>
 
@@ -26,7 +26,7 @@ interface SongDuo {
 }
 
 @Dao
-interface PlaylistDuo {
+interface PlaylistDao {
     @Query("SELECT * FROM playlists")
     fun getAll(): Flow<List<Playlist>>
 
@@ -38,7 +38,7 @@ interface PlaylistDuo {
 }
 
 @Dao
-interface PlaylistSongDuo {
+interface PlaylistSongDao {
     @Query("""
         SELECT songs.* FROM songs
         INNER JOIN playlist_song_cross_ref AS ref

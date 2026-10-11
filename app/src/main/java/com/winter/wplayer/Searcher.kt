@@ -50,7 +50,7 @@ class Searcher(context: Context) {
                 )
                 audioList.add(
                     Song(
-                        id = id,
+                        songId = id,
                         uri = uri,
                         coverUri = coverUri,
                         title = c.getString(titleCol),
