@@ -19,9 +19,9 @@ import kotlin.collections.emptyList
 class MusicListViewModel(app: Application): AndroidViewModel(app) {
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     private val database = AppDataBase.get(application)
-    private val audioDao = database.audioDao()
+    private val songDao = database.songDao()
 
-    val audioLists: StateFlow<List<Song>> = audioDao
+    val audioLists: StateFlow<List<Song>> = songDao
         .getAll()
         .stateIn(
             scope = viewModelScope,

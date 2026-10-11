@@ -12,7 +12,7 @@ import androidx.room.TypeConverters
 @Database(entities = [Song::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDataBase: RoomDatabase() {
-    abstract fun audioDao(): SongDao
+    abstract fun songDao(): SongDao
 
     companion object {
         @Volatile private var INSTANCE: AppDataBase? = null
