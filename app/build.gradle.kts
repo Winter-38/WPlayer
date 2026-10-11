@@ -9,6 +9,7 @@ val keystoreProperties = Properties().apply {
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp") version "2.3.10"
 }
 
 android {
@@ -66,6 +67,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.0")
     implementation("io.coil-kt.coil3:coil-compose:3.6.2")
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation("androidx.room:room-runtime:2.8.5")
+    implementation("androidx.room:room-ktx:2.8.5")
+    ksp("androidx.room:room-compiler:2.8.5")
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
