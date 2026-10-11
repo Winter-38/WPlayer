@@ -9,23 +9,24 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 
 
-@Database(entities = [Song::class], version = 1, exportSchema = false)
+@Database(entities = [Song::class, Playlist::class, PlaylistSongCrossRef::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDataBase: RoomDatabase() {
     abstract fun songDao(): SongDao
+    abstract fun playlistDao(): PlaylistDao
+    abstract fun playlistSongDao(): PlaylistSongDao
 
     companion object {
-        @Volatile private var INSTANCE: AppDataBase? = null
+        @Volatile
+        private var INSTANCE: AppDataBase? = null
 
         fun get(context: Context): AppDataBase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDataBase::class.java,
                     "music.db"
-                ).build()
-                INSTANCE = instance
-                instance
+                ).build().also { INSTANCE = it }
             }
         }
     }

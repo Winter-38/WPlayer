@@ -19,7 +19,7 @@ data class Song (
 
 @Entity(tableName = "playlists")
 data class Playlist(
-    @PrimaryKey(autoGenerate = true) val playlistId: Int = 0,
+    @PrimaryKey(autoGenerate = true) val playlistId: Long = 0,
     val name: String,
     val coverUri: Uri?
 )

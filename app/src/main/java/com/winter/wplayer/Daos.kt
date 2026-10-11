@@ -31,7 +31,7 @@ interface PlaylistDao {
     fun getAll(): Flow<List<Playlist>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(playlist: Playlist): Int
+    suspend fun insert(playlist: Playlist): Long
 
     @Delete
     suspend fun delete(playlist: Playlist)
@@ -46,14 +46,14 @@ interface PlaylistSongDao {
         WHERE ref.playlistId = :playlistId
         ORDER BY ref.pos ASC
     """)
-    fun getSongsInPlaylist(playlistId: Int): Flow<List<Song>>
+    fun getSongsInPlaylist(playlistId: Long): Flow<List<Song>>
 
     @Query("SELECT COALESCE(MAX(pos), -1) + 1 FROM playlist_song_cross_ref WHERE playlistId = :playlistId")
-    suspend fun nextPos(playlistId: Int): Int
+    suspend fun nextPos(playlistId: Long): Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCrossRef(ref: PlaylistSongCrossRef)
 
     @Query("DELETE FROM playlist_song_cross_ref WHERE playlistId = :playlistId AND songId = :songId")
-    suspend fun delete(playlistId: Int, songId: Long)
+    suspend fun delete(playlistId: Long, songId: Long)
 }

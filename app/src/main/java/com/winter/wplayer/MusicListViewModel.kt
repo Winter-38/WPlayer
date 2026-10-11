@@ -16,19 +16,49 @@ import kotlinx.coroutines.launch
 import kotlin.collections.emptyList
 
 
-class MusicListViewModel(app: Application): AndroidViewModel(app) {
+class MusicListViewModel(
+    app: Application,
+    ): AndroidViewModel(app) {
     private val _songs = MutableStateFlow<List<Song>>(emptyList())
     private val database = AppDataBase.get(application)
     private val songDao = database.songDao()
+    private val playlistDao = database.playlistDao()
+    private val playlistSongDao = database.playlistSongDao()
 
-    val audioLists: StateFlow<List<Song>> = songDao
-        .getAll()
+    val songLists: StateFlow<List<Song>> = songDao.getAll()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
+    val playlists = playlistDao.getAll()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    fun importSongs(list: List<Song>) = viewModelScope.launch {
+        songDao.insertAll(list)
+    }
+
+    fun createPlaylist(name: String, onCreated: (Long) -> Unit = {} ) =
+        viewModelScope.launch {
+            val playlistId = playlistDao.insert(Playlist(0, name, null))
+            onCreated(playlistId)
+        }
+
+    fun addToPlaylist(playlistId: Long, songId: Long) = viewModelScope.launch {
+        val pos = playlistSongDao.nextPos(playlistId)
+        playlistSongDao.insertCrossRef(PlaylistSongCrossRef(playlistId, songId, pos))
+    }
+
+    fun removeFromPlaylist(playlistId: Long, songId: Long) = viewModelScope.launch {
+        playlistSongDao.delete(playlistId, songId)
+    }
+
+    fun playlistSongs(playlistId: Long) = playlistSongDao.getSongsInPlaylist(playlistId)
 
     val songs: StateFlow<List<Song>> = _songs.asStateFlow()
 
