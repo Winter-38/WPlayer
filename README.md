@@ -19,4 +19,7 @@ so you can download and install it
 ### Environment
 - Android sdk >= 24 ( the Android target sdk is 37 ) 
 ### Install
-Download the release apk and install it to your device
+```bash
+git clone https://github.com/winter-38/WPlayer.git
+cd WPlayer
+./gradlew assembleRelease 
