@@ -52,6 +52,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import coil3.compose.AsyncImage
 import com.winter.wplayer.ui.theme.ListBackgroundColor
@@ -89,21 +90,22 @@ class MainActivity : ComponentActivity() {
     @OptIn(UnstableApi::class)
     @Composable
     fun PlayList(modifier: Modifier){
-        val songs by musicListViewModel.songs.collectAsStateWithLifecycle()
-        val items by musicListViewModel.medias.collectAsStateWithLifecycle()
+        val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
+        val items by musicListViewModel.mediaLists.collectAsStateWithLifecycle()
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
-            musicListViewModel.loadSongs()
-            musicListViewModel.loadMediaItems()
             musicPlayerViewModel.buildController()
         }
 
-        LaunchedEffect(musicPlayerViewModel.isReady, items, controller) {
-            if (controller != null) {
+        LaunchedEffect( items, controller) {
+            if (controller != null && !musicListViewModel.loaded.value) {
                 controller?.setMediaItems(items, 0, 0)
                 controller?.prepare()
+                Log.d(TAG, "edw")
             }
+            Log.d(TAG, "${controller.toString()}")
+            Log.d(TAG, "${musicListViewModel.loaded.value}")
         }
 
         LazyColumn(modifier) {
@@ -152,7 +154,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun PlayBar(modifier: Modifier){
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
-        val items by musicListViewModel.songs.collectAsStateWithLifecycle()
+        val items by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val songIndex by musicPlayerViewModel.songIndex.collectAsStateWithLifecycle()
         val coverUri = items.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
 

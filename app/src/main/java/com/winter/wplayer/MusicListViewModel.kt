@@ -1,6 +1,9 @@
 package com.winter.wplayer
 
 import android.app.Application
+import android.util.Log
+import androidx.annotation.OptIn
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,22 +11,25 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.collections.emptyList
+@OptIn(UnstableApi::class)
 
+class MusicListViewModel
+    (app: Application): AndroidViewModel(app) {
+    private val TAG = "MusicListViewModel"
 
-class MusicListViewModel(
-    app: Application,
-    ): AndroidViewModel(app) {
-    private val _songs = MutableStateFlow<List<Song>>(emptyList())
+    private val _mediaLists = MutableStateFlow<List<MediaItem>>(emptyList())
+    val mediaLists: StateFlow<List<MediaItem>> = _mediaLists.asStateFlow()
     private val database = AppDataBase.get(application)
     private val songDao = database.songDao()
     private val playlistDao = database.playlistDao()
     private val playlistSongDao = database.playlistSongDao()
+    private val _loaded = MutableStateFlow(false)
+    val loaded = _loaded.asStateFlow()
 
     val songLists: StateFlow<List<Song>> = songDao.getAll()
         .stateIn(
@@ -38,6 +44,18 @@ class MusicListViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    init {
+        if (!_loaded.value) {
+            viewModelScope.launch {
+                val searcher: Searcher = Searcher(app)
+                val list = searcher.queryAudioList(application)
+                songDao.insertAll(list)
+                _mediaLists.value = songLists.value.map { MediaItem.fromUri(it.uri) }
+                _loaded.value = true
+            }
+        }
+    }
 
     fun importSongs(list: List<Song>) = viewModelScope.launch {
         songDao.insertAll(list)
@@ -59,27 +77,4 @@ class MusicListViewModel(
     }
 
     fun playlistSongs(playlistId: Long) = playlistSongDao.getSongsInPlaylist(playlistId)
-
-    val songs: StateFlow<List<Song>> = _songs.asStateFlow()
-
-    private val _medias = MutableStateFlow<List<MediaItem>>(emptyList())
-    val medias: StateFlow<List<MediaItem>> = _medias.asStateFlow()
-
-    private val searcher: Searcher = Searcher(app)
-    private val TAG = "MusicListViewModel"
-    fun loadSongs() {
-        if (_songs.value.isNotEmpty()) return
-        viewModelScope.launch{
-            val list = searcher.queryAudioList(application)
-            _songs.value = list
-        }
-    }
-
-
-    fun loadMediaItems() {
-        viewModelScope.launch {
-            val list = _songs.filter { it.isNotEmpty() }.first()
-            _medias.value = _songs.value.map { MediaItem.fromUri(it.uri) }
-        }
-    }
 }

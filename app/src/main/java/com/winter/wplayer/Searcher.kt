@@ -21,7 +21,7 @@ class Searcher(context: Context) {
         MediaStore.Audio.Media.DURATION
     )
 
-    suspend public fun queryAudioList(context: Context): List<Song> = withContext(Dispatchers.IO) {
+    suspend fun queryAudioList(context: Context): List<Song> = withContext(Dispatchers.IO) {
         val cursor = context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             projection,

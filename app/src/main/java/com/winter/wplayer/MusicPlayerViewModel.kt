@@ -18,8 +18,6 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     }
     private val _controller = MutableStateFlow<MediaController?>(null)
     val controller = _controller.asStateFlow()
-    private val _isReady = MutableStateFlow(false)
-    val isReady = _isReady.asStateFlow()
 
     private val _songIndex = MutableStateFlow(0)
     val songIndex = _songIndex.asStateFlow()
@@ -36,7 +34,6 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         val future = MediaController.Builder(context, sessionToken).buildAsync()
         _controller.value = future.await()
         _controller.value?.addListener(listener)
-        _isReady.value = true
     }
 
     fun play(mediaItem: MediaItem) {
