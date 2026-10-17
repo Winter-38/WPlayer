@@ -21,9 +21,6 @@ import kotlin.collections.emptyList
 class MusicListViewModel
     (app: Application): AndroidViewModel(app) {
     private val TAG = "MusicListViewModel"
-
-    private val _mediaLists = MutableStateFlow<List<MediaItem>>(emptyList())
-    val mediaLists: StateFlow<List<MediaItem>> = _mediaLists.asStateFlow()
     private val database = AppDataBase.get(application)
     private val songDao = database.songDao()
     private val playlistDao = database.playlistDao()
@@ -51,7 +48,6 @@ class MusicListViewModel
                 val searcher: Searcher = Searcher(app)
                 val list = searcher.queryAudioList(application)
                 songDao.insertAll(list)
-                _mediaLists.value = songLists.value.map { MediaItem.fromUri(it.uri) }
                 _loaded.value = true
             }
         }
