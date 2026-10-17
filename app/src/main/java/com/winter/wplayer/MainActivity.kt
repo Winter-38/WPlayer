@@ -38,7 +38,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -91,7 +90,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun PlayList(modifier: Modifier){
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
-        val items by musicListViewModel.mediaLists.collectAsStateWithLifecycle()
+        val items = musicListViewModel.songLists.collectAsStateWithLifecycle().value.map { MediaItem.fromUri(it.uri) }
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
 
         LaunchedEffect(Unit) {
@@ -99,13 +98,10 @@ class MainActivity : ComponentActivity() {
         }
 
         LaunchedEffect( items, controller) {
-            if (controller != null && !musicListViewModel.loaded.value) {
+            if (controller != null) {
                 controller?.setMediaItems(items, 0, 0)
                 controller?.prepare()
-                Log.d(TAG, "edw")
             }
-            Log.d(TAG, "${controller.toString()}")
-            Log.d(TAG, "${musicListViewModel.loaded.value}")
         }
 
         LazyColumn(modifier) {
