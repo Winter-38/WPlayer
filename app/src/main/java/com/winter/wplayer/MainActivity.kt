@@ -98,7 +98,8 @@ class MainActivity : ComponentActivity() {
         }
 
         LaunchedEffect( items, controller) {
-            if (controller != null) {
+            //这个if在干什么我也不知道。。。也许是防止重进后重置播放？
+            if (controller != null && !(controller?.isPlaying ?: true)) {
                 controller?.setMediaItems(items, 0, 0)
                 controller?.prepare()
             }
