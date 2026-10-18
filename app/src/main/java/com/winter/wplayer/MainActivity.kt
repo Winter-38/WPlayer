@@ -173,7 +173,7 @@ class MainActivity : ComponentActivity() {
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val songIndex by musicPlayerViewModel.songIndex.collectAsStateWithLifecycle()
         val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
-        val title = songs.getOrNull(songIndex)?.title ?: "unknown title"
+        val title = (songs.getOrNull(songIndex)?.title ?: "unknown title") + " - " + (songs.getOrNull(songIndex)?.artist ?: "unknown artist")
 
         Row(verticalAlignment = Alignment.CenterVertically){
             Spacer(modifier = Modifier.weight(1f))
