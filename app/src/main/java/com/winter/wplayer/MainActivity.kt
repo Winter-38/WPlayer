@@ -171,7 +171,7 @@ class MainActivity : ComponentActivity() {
     fun PlayBar(){
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
-        val songIndex by musicPlayerViewModel.songIndex.collectAsStateWithLifecycle()
+        val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
         val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
         val title = (songs.getOrNull(songIndex)?.title ?: "unknown title") + " - " + (songs.getOrNull(songIndex)?.artist ?: "unknown artist")
 

@@ -17,16 +17,6 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     }
     private val _controller = MutableStateFlow<MediaController?>(null)
     val controller = _controller.asStateFlow()
-
-    private val _songIndex = MutableStateFlow(0)
-    val songIndex = _songIndex.asStateFlow()
-
-    private val listener = object: Player.Listener {
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            _songIndex.value = _controller.value?.currentMediaItemIndex ?: 0
-        }
-    }
-
     private val _currentRepeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
     val currentRepeatMode = _currentRepeatMode.asStateFlow()
     private val _isShuffleEnabled = MutableStateFlow(false)
@@ -51,7 +41,6 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, sessionToken).buildAsync()
         _controller.value = future.await()
-        _controller.value?.addListener(listener)
     }
 
     override fun onCleared() {
