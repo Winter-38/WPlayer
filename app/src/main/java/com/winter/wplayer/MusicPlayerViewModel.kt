@@ -2,7 +2,6 @@ package com.winter.wplayer
 
 import android.app.Application
 import android.content.ComponentName
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -28,28 +27,31 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         }
     }
 
+    private val _currentRepeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
+    val currentRepeatMode = _currentRepeatMode.asStateFlow()
+    private val _isShuffleEnabled = MutableStateFlow(false)
+    val isShuffleEnabled = _isShuffleEnabled.asStateFlow()
+
+    fun cycleRepeatMode() {
+        val controller = _controller.value ?: return
+        val repeatMode = when (controller.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
+        val isShuffle = if (controller.shuffleModeEnabled) true else false
+        controller.repeatMode = repeatMode
+        controller.shuffleModeEnabled = isShuffle
+        _currentRepeatMode.value = repeatMode
+        _isShuffleEnabled.value = isShuffle
+    }
+
     suspend fun buildController() {
         val context = getApplication<Application>()
         val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, sessionToken).buildAsync()
         _controller.value = future.await()
         _controller.value?.addListener(listener)
-    }
-
-    fun play(mediaItem: MediaItem) {
-        if (_controller.value != null) {
-            controller.run {
-                play(mediaItem)
-            }
-        }
-    }
-
-    fun play(mediaItems: List<MediaItem>) {
-        if (_controller.value != null) {
-            controller.run {
-                play(mediaItems)
-            }
-        }
     }
 
     override fun onCleared() {

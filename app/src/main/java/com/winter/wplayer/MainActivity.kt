@@ -14,10 +14,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -45,7 +49,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -80,7 +87,16 @@ class MainActivity : ComponentActivity() {
                 RequestPermission()
                 Column(modifier = Modifier.fillMaxSize()) {
                     PlayList(Modifier.weight(15f))
-                    PlayBar(Modifier.weight(1f))
+                    Surface(
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .padding(2.dp),
+                        shape = RoundedCornerShape(15.dp),
+                        color = Color.White,
+                        border = BorderStroke(3.dp, ListBorderColor)
+                    ) {
+                        PlayBar()
+                    }
                 }
             }
         }
@@ -97,10 +113,11 @@ class MainActivity : ComponentActivity() {
             musicPlayerViewModel.buildController()
         }
 
+        //检测items和controller值变化，防止异步错误
         LaunchedEffect( items, controller) {
-            //这个if在干什么我也不知道。。。也许是防止重进后重置播放？
+            //检测controller不为null并且做播放前准备，添加isPlaying判断防止重进app打断播放
             if (controller != null && !(controller?.isPlaying ?: true)) {
-                controller?.setMediaItems(items, 0, 0)
+                controller?.setMediaItems(items, 0, 0) //默认为第一首歌曲
                 controller?.prepare()
             }
         }
@@ -122,24 +139,26 @@ class MainActivity : ComponentActivity() {
                         ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.weight(1f))
                     AsyncImage(
                         model = songs.get(index).coverUri,
                         contentDescription = "cover of each songs",
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.weight(3f)
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.weight(1f))
                     Text(
                         modifier = Modifier
+                            .weight(24f)
                             .clickable {
-                            if (controller != null) {
-                                controller?.apply {
-                                    seekTo(index, 0L)
-                                    play()
+                                if (controller != null) {
+                                    controller?.apply {
+                                        seekTo(index, 0L)
+                                        play()
+                                    }
                                 }
-                            }
-                        },
+                            },
+                        maxLines = 1,
                         text = "${song.title} - ${song.artist}"
                     )
                 }
@@ -149,67 +168,91 @@ class MainActivity : ComponentActivity() {
     }
     @OptIn(UnstableApi::class)
     @Composable
-    fun PlayBar(modifier: Modifier){
+    fun PlayBar(){
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
-        val items by musicListViewModel.songLists.collectAsStateWithLifecycle()
+        val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val songIndex by musicPlayerViewModel.songIndex.collectAsStateWithLifecycle()
-        val coverUri = items.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
+        val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
+        val title = songs.getOrNull(songIndex)?.title ?: "unknown title"
 
-        Row(modifier){
-            Spacer(modifier = Modifier.width(16.dp))
+        Row(verticalAlignment = Alignment.CenterVertically){
+            Spacer(modifier = Modifier.weight(1f))
             AsyncImage(
                 model = coverUri,
                 contentDescription = "cover of the playing song",
                 modifier = Modifier
-                    .size(60.dp)
+                    .weight(4f)
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
-            //
-            Spacer(modifier = Modifier.width(20.dp))
-            //seek to previous
-            Button(
-                onClick = {
-                    controller?.apply {
-                        if (hasPreviousMediaItem()) seekToPrevious()
-                    }
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = title,
+                maxLines = 1,
+                modifier = Modifier
+                    .width(40.dp)
+                    .basicMarquee(
+                        iterations = Int.MAX_VALUE,
+                        repeatDelayMillis = 500,
+                        initialDelayMillis = 500,
+                        velocity = 30.dp
+                    )
+                    .weight(9f)
+            )
+            Row {
+                //跳到上一首
+                Button(
+                    onClick = {
+                        controller?.apply {
+                            if (hasPreviousMediaItem()) seekToPrevious()
+                        }
+                    },
+                    shape = CircleShape,
+                    modifier = Modifier.width(50.dp),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_skipprevious_outline),
+                        contentDescription = "skip to previous song"
+                    )
                 }
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_skipprevious_outline),
-                    contentDescription = "skip to previous song"
-                )
-            }
 
-            //(stop/play) button
-            Button(
-                onClick = {
-                    controller?.apply {
-                        if (isPlaying) pause()
-                        else play()
-                    }
-                },
-                shape = CircleShape
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_play_outline),
-                    contentDescription = "play_button"
-                )
-            }
-
-            //seekToNext Button
-            Button(
-                onClick = {
-                    controller?.apply {
-                        if (hasNextMediaItem()) seekToNext()
-                    }
+                //(stop/play)
+                Button(
+                    onClick = {
+                        controller?.apply {
+                            if (isPlaying) pause()
+                            else play()
+                        }
+                    },
+                    modifier = Modifier.size(50.dp),
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_play_outline),
+                        contentDescription = "play_button"
+                    )
                 }
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_skipnext_outline),
-                    contentDescription = "skip to next song"
-                )
+
+                //跳到下一首
+                Button(
+                    onClick = {
+                        controller?.apply {
+                            if (hasNextMediaItem()) seekToNext()
+                        }
+                    },
+                    shape = CircleShape,
+                    modifier = Modifier.width(50.dp),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_skipnext_outline),
+                        contentDescription = "skip to next song"
+                    )
+                }
             }
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 
