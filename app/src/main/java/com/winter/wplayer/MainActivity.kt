@@ -167,7 +167,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                         maxLines = 1,
-                        text = song.title + "-" + song.artist
+                        text = song.title + " - " + song.artist
                     )
                 }
                 Spacer(modifier = Modifier.padding(2.dp))

@@ -4,14 +4,19 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFrom
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -24,8 +29,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -51,12 +58,14 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
     val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
     //歌曲封面&标题
     val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
-    val title = (songs.getOrNull(songIndex)?.title ?: "Unknown title") + " - " + (songs.getOrNull(songIndex)?.artist ?: "Unknown artist")
-
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
-            modifier = Modifier.weight(1.5f).fillMaxWidth()
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                //.border(2.dp, Color.Blue)
         ) {
+            //返回键-------------------------------
             Button(
                 onClick = { onNavToDetail() },
                 shape = CircleShape,
@@ -68,21 +77,31 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                     contentDescription = "Back to home screen"
                 )
             }
+            //封面--------------------------------
             AsyncImage(
                 model = coverUri,
                 contentDescription = "Big song cover",
                 modifier = Modifier
                     .size(300.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .align(Alignment.Center),
+                    .align(Alignment.BottomCenter),
                 contentScale = ContentScale.Crop
             )
         }
 
-        Column (modifier = Modifier.weight(1f)) {
+        //无无无无无无-------------------------------
+        Spacer(modifier = Modifier.weight(0.1f))
+
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .weight(0.8f)
+            //.border(2.dp, Color.Blue)
+        ) {
+            //标题---------------------------------------------------------------------------------------标题
             Text(
                 maxLines = 1,
                 modifier = Modifier
+                    .fillMaxWidth()
                     .basicMarquee(
                         iterations = Int.MAX_VALUE,
                         repeatDelayMillis = 500,
@@ -90,19 +109,39 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                         velocity = 30.dp
                     )
                     .weight(1f),
+                    //.border(2.dp, Color.Blue),
                 fontSize = 25.sp,
-                text = title
+                textAlign = TextAlign.Center,
+                text = songs.getOrNull(songIndex)?.title ?: "Unknown title"
             )
 
-            Spacer(modifier = Modifier.weight(0.1f))
+            Text(
+                maxLines = 1,
+                modifier = Modifier
+                    .weight(0.5f)
+                    .fillMaxWidth()
+                    .basicMarquee(
+                        iterations = Int.MAX_VALUE,
+                        repeatDelayMillis = 500,
+                        initialDelayMillis = 500,
+                        velocity = 30.dp
+                ),
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                text = (songs.getOrNull(songIndex)?.artist ?: "Unknown artist")
+            )
 
+            //按钮组-------------------------------------------------------------------------------------按钮组
 
             Row (
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .weight(2.5f)
-            ){
-                //跳到上一首
+                    .fillMaxWidth()
+                    .weight(4f),
+                    //.border(width = 2.dp, color = Color.Blue),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.Top
+            ) {
+                //跳到上一首----------------------
                 Button(
                     onClick = {
                         controller?.apply {
@@ -110,7 +149,10 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                         }
                     },
                     shape = CircleShape,
-                    modifier = Modifier.size(80.dp).padding(8.dp),
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(8.dp)
+                        .align(Alignment.CenterVertically),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Icon(
@@ -118,16 +160,18 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                         contentDescription = "Skip to previous song"
                     )
                 }
-
+                //暂停或开始----------------------
                 Button(
                     onClick = {
                         controller?.apply {
                             if (isPlaying) pause()
                             else play()
                         }
-                        Log.d("play-screen", "controller ${controller.toString()}")
                     },
-                    modifier = Modifier.size(80.dp).padding(8.dp),
+                    modifier = Modifier
+                        .size(90.dp)
+                        .padding(8.dp)
+                        .align(Alignment.CenterVertically),
                     shape = CircleShape,
                     contentPadding = PaddingValues(0.dp)
                 ) {
@@ -137,7 +181,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                     )
                 }
 
-                //跳到下一首
+                //跳到下一首----------------------
                 Button(
                     onClick = {
                         controller?.apply {
@@ -145,7 +189,10 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                         }
                     },
                     shape = CircleShape,
-                    modifier = Modifier.size(80.dp).padding(8.dp),
+                    modifier = Modifier
+                        .size(80.dp)
+                        .padding(8.dp)
+                        .align(Alignment.CenterVertically),
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Icon(
