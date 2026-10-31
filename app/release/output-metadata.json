@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.example.wplayer",
+  "applicationId": "com.winter.wplayer",
   "variantName": "release",
   "elements": [
     {

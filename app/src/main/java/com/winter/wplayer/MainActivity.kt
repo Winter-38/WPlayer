@@ -1,7 +1,6 @@
 package com.winter.wplayer
 
 import android.Manifest
-import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -13,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.annotation.OptIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -75,9 +75,8 @@ class MainActivity : ComponentActivity() {
         private const val TAG = "MainActivityAction"
     }
 
-
-    val musicListViewModel by lazy { MusicListViewModel(this.applicationContext as Application) }
-    val musicPlayerViewModel by lazy { MusicPlayerViewModel(this.applicationContext as Application) }
+    val musicListViewModel: MusicListViewModel by viewModels()
+    val musicPlayerViewModel: MusicPlayerViewModel by viewModels()
 
 
     @OptIn(UnstableApi::class)
@@ -87,6 +86,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WPlayerTheme {
+                LaunchedEffect(Unit) {
+                    musicPlayerViewModel.buildController()
+                }
                 val navController = rememberNavController()
                 RequestPermission()
                 NavHost(navController, "home") {
@@ -98,8 +100,7 @@ class MainActivity : ComponentActivity() {
                                     .weight(0.09f)
                                     .padding(2.dp),
                                 shape = RoundedCornerShape(15.dp),
-                                color = Color.White,
-                                border = BorderStroke(3.dp, ListBorderColor)
+                                color = Color.White
                             ) {
                                 PlayBar {
                                     navController.navigate("play-screen") { launchSingleTop = true }
@@ -121,10 +122,6 @@ class MainActivity : ComponentActivity() {
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val items = musicListViewModel.songLists.collectAsStateWithLifecycle().value.map { MediaItem.fromUri(it.uri) }
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
-
-        LaunchedEffect(Unit) {
-            musicPlayerViewModel.buildController()
-        }
 
         //检测items和controller值变化，防止异步错误
         LaunchedEffect( items, controller) {
