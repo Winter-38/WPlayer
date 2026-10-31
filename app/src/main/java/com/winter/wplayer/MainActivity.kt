@@ -50,17 +50,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.component1
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.winter.wplayer.ui.PlayScreen
 import com.winter.wplayer.ui.theme.ListBackgroundColor
 import com.winter.wplayer.ui.theme.ListBorderColor
 import com.winter.wplayer.ui.theme.WPlayerTheme
@@ -84,18 +87,28 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             WPlayerTheme {
+                val navController = rememberNavController()
                 RequestPermission()
-                Column(modifier = Modifier.fillMaxSize()) {
-                    PlayList(Modifier.weight(15f))
-                    Surface(
-                        modifier = Modifier
-                            .weight(1.2f)
-                            .padding(2.dp),
-                        shape = RoundedCornerShape(15.dp),
-                        color = Color.White,
-                        border = BorderStroke(3.dp, ListBorderColor)
-                    ) {
-                        PlayBar()
+                NavHost(navController, "home") {
+                    composable("home") {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            PlayList(Modifier.weight(1f))
+                            Surface(
+                                modifier = Modifier
+                                    .weight(0.09f)
+                                    .padding(2.dp),
+                                shape = RoundedCornerShape(15.dp),
+                                color = Color.White,
+                                border = BorderStroke(3.dp, ListBorderColor)
+                            ) {
+                                PlayBar {
+                                    navController.navigate("play-screen") { launchSingleTop = true }
+                                }
+                            }
+                        }
+                    }
+                    composable("play-screen") {
+                        PlayScreen({ navController.popBackStack() } )
                     }
                 }
             }
@@ -131,11 +144,6 @@ class MainActivity : ComponentActivity() {
                         .background(
                             color = ListBackgroundColor,
                             shape = RoundedCornerShape(8.dp)
-                        )
-                        .border(
-                            width = 3.dp,
-                            color = ListBorderColor,
-                            shape = RoundedCornerShape(8.dp)
                         ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -143,7 +151,7 @@ class MainActivity : ComponentActivity() {
                     AsyncImage(
                         model = songs.get(index).coverUri,
                         contentDescription = "cover of each songs",
-                        modifier = Modifier.weight(3f)
+                        modifier = Modifier.align(Alignment.CenterVertically).weight(3f)
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -159,7 +167,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                         maxLines = 1,
-                        text = "${song.title} - ${song.artist}"
+                        text = song.title + "-" + song.artist
                     )
                 }
                 Spacer(modifier = Modifier.padding(2.dp))
@@ -168,91 +176,58 @@ class MainActivity : ComponentActivity() {
     }
     @OptIn(UnstableApi::class)
     @Composable
-    fun PlayBar(){
+    fun PlayBar(onNavToDetail: () -> Unit){
         val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
         val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
         val title = (songs.getOrNull(songIndex)?.title ?: "unknown title") + " - " + (songs.getOrNull(songIndex)?.artist ?: "unknown artist")
 
-        Row(verticalAlignment = Alignment.CenterVertically){
-            Spacer(modifier = Modifier.weight(1f))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavToDetail() }
+        ) {
+            Spacer(modifier = Modifier.size(16.dp))
             AsyncImage(
                 model = coverUri,
                 contentDescription = "cover of the playing song",
                 modifier = Modifier
-                    .weight(4f)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
+                    .align(Alignment.CenterVertically)
+                    .weight(0.21f)
+                    .clip(RoundedCornerShape(16.dp)),
             )
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.size(8.dp))
             Text(
                 text = title,
                 maxLines = 1,
                 modifier = Modifier
-                    .width(40.dp)
+                    .weight(1f)
                     .basicMarquee(
                         iterations = Int.MAX_VALUE,
                         repeatDelayMillis = 500,
                         initialDelayMillis = 500,
                         velocity = 30.dp
                     )
-                    .weight(9f)
             )
-            Row {
-                //跳到上一首
-                Button(
-                    onClick = {
-                        controller?.apply {
-                            if (hasPreviousMediaItem()) seekToPrevious()
-                        }
-                    },
-                    shape = CircleShape,
-                    modifier = Modifier.width(50.dp),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_skipprevious_outline),
-                        contentDescription = "skip to previous song"
-                    )
-                }
-
-                //(stop/play)
-                Button(
-                    onClick = {
-                        controller?.apply {
-                            if (isPlaying) pause()
-                            else play()
-                        }
-                    },
-                    modifier = Modifier.size(50.dp),
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_play_outline),
-                        contentDescription = "play_button"
-                    )
-                }
-
-                //跳到下一首
-                Button(
-                    onClick = {
-                        controller?.apply {
-                            if (hasNextMediaItem()) seekToNext()
-                        }
-                    },
-                    shape = CircleShape,
-                    modifier = Modifier.width(50.dp),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_skipnext_outline),
-                        contentDescription = "skip to next song"
-                    )
-                }
+            Button(
+                onClick = {
+                    controller?.apply {
+                        if (isPlaying) pause()
+                        else play()
+                    }
+                },
+                modifier = Modifier.weight(0.2f),
+                shape = CircleShape,
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_play_outline),
+                    contentDescription = "play_button"
+                )
             }
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.size(16.dp))
         }
     }
 

@@ -45,7 +45,7 @@ class MusicListViewModel
     init {
         if (!_loaded.value) {
             viewModelScope.launch {
-                val searcher: Searcher = Searcher(app)
+                val searcher = Searcher(app)
                 val list = searcher.queryAudioList(application)
                 songDao.insertAll(list)
                 _loaded.value = true

@@ -21,7 +21,7 @@ abstract class AppDataBase: RoomDatabase() {
         private var INSTANCE: AppDataBase? = null
 
         fun get(context: Context): AppDataBase {
-            return INSTANCE ?: synchronized(this) {
+            return INSTANCE ?: synchronized (this) {
                 INSTANCE ?: Room.databaseBuilder(
                     context.applicationContext,
                     AppDataBase::class.java,
