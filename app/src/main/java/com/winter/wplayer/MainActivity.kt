@@ -141,7 +141,15 @@ class MainActivity : ComponentActivity() {
                         .background(
                             color = ListBackgroundColor,
                             shape = RoundedCornerShape(8.dp)
-                        ),
+                        )
+                        .clickable {
+                            if (controller != null) {
+                                controller?.apply {
+                                    seekTo(index, 0L)
+                                    play()
+                                }
+                            }
+                        },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
@@ -154,15 +162,7 @@ class MainActivity : ComponentActivity() {
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         modifier = Modifier
-                            .weight(24f)
-                            .clickable {
-                                if (controller != null) {
-                                    controller?.apply {
-                                        seekTo(index, 0L)
-                                        play()
-                                    }
-                                }
-                            },
+                            .weight(24f),
                         maxLines = 1,
                         text = song.title + " - " + song.artist
                     )
