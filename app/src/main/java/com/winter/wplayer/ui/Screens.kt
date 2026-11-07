@@ -23,6 +23,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,6 +56,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
 
     //播放器操控
     val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+    val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
     //播放列表&歌曲索引
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
     val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
@@ -161,23 +165,23 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                     )
                 }
                 //暂停或开始----------------------
-                Button(
+                IconButton(
                     onClick = {
                         controller?.apply {
-                            if (isPlaying) pause()
-                            else play()
+                            if (this.isPlaying) pause() else play()
+                            Log.d("test", "${isPlaying}")
                         }
                     },
                     modifier = Modifier
                         .size(90.dp)
                         .padding(8.dp)
                         .align(Alignment.CenterVertically),
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(0.dp)
+                    shape = CircleShape
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_play_outline),
-                        contentDescription = "play_button"
+                        painter = if (isPlaying == true) painterResource(R.drawable.ic_pause)
+                            else painterResource(R.drawable.ic_play_outline),
+                        contentDescription = if (controller?.isPlaying == true) "Pause Button" else "Play Button"
                     )
                 }
 
