@@ -19,33 +19,55 @@ import kotlinx.coroutines.sync.withLock
 
 class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     companion object {
-        private val TAG = "MusicPlayerViewModel"
+        private val TAG = "MusicPlayerVM"
     }
     private val buildMutex = Mutex()
     private var _controller = MutableStateFlow<MediaController?>(null)
     val controller = _controller.asStateFlow()
 
-    private val _isPlaying = MutableStateFlow<Boolean?>(null)
+    private val _isPlaying = MutableStateFlow<Boolean?>(false)
     val isPlaying = _isPlaying.asStateFlow()
-    private val _currentRepeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
-    val currentRepeatMode = _currentRepeatMode.asStateFlow()
-    private val _isShuffleEnabled = MutableStateFlow(false)
+    private val _repeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
+    val repeatMode = _repeatMode.asStateFlow()
+    private val _isShuffleEnabled = MutableStateFlow<Boolean?>(false)
     val isShuffleEnabled = _isShuffleEnabled.asStateFlow()
 
 
+    fun play() {
+        if (_controller.value != null) {
+            _controller.value!!.play()
+        }
+    }
 
-    fun cycleRepeatMode() {
+    fun pause() {
+        if (_controller.value != null) {
+            _controller.value!!.pause()
+        }
+    }
+    fun seekToPrevious() {
+        if (_controller.value != null && _controller.value!!.hasPreviousMediaItem()) {
+            _controller.value!!.seekToPrevious()
+        }
+    }
+
+    fun seekToNext() {
+        if (_controller.value != null && _controller.value!!.hasNextMediaItem()) {
+            _controller.value!!.seekToNext()
+        }
+    }
+
+    fun switchRepeatMode() {
         val controller = _controller.value ?: return
-        val repeatMode = when (controller.repeatMode) {
+        controller.repeatMode = when (controller.repeatMode) {
             Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
             Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
             else -> Player.REPEAT_MODE_OFF
         }
-        val isShuffle = if (controller.shuffleModeEnabled) true else false
-        controller.repeatMode = repeatMode
-        controller.shuffleModeEnabled = isShuffle
-        _currentRepeatMode.value = repeatMode
-        _isShuffleEnabled.value = isShuffle
+    }
+
+    fun switchShuffledMode(){
+        val controller = _controller.value ?: return
+        controller.shuffleModeEnabled = !controller.shuffleModeEnabled
     }
     
     suspend fun buildController() {
@@ -67,6 +89,14 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
                     _controller.value?.addListener(object : Player.Listener {
                         override fun onIsPlayingChanged(isPlaying: Boolean) {
                             _isPlaying.value = isPlaying
+                        }
+
+                        override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                            _isShuffleEnabled.value = shuffleModeEnabled
+                        }
+
+                        override fun onRepeatModeChanged(repeatMode: Int) {
+                            _repeatMode.value = repeatMode
                         }
                     })
                 },

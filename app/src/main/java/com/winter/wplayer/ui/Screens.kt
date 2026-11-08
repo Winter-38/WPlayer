@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.Player
 import coil3.compose.AsyncImage
 import com.winter.wplayer.IndexHolder
 import com.winter.wplayer.MusicListViewModel
@@ -94,7 +95,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
         }
 
         //无无无无无无-------------------------------
-        Spacer(modifier = Modifier.weight(0.1f))
+        Spacer(modifier = Modifier.weight(0.09f))
 
         Column(modifier = Modifier
             .fillMaxWidth()
@@ -112,7 +113,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                         initialDelayMillis = 500,
                         velocity = 30.dp
                     )
-                    .weight(1f),
+                    .weight(0.9f),
                     //.border(2.dp, Color.Blue),
                 fontSize = 25.sp,
                 textAlign = TextAlign.Center,
@@ -136,75 +137,112 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
             )
 
             //按钮组-------------------------------------------------------------------------------------按钮组
+            ButtonBar()
+        }
+    }
+}
 
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(4f),
-                    //.border(width = 2.dp, color = Color.Blue),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.Top
-            ) {
-                //跳到上一首----------------------
-                Button(
-                    onClick = {
-                        controller?.apply {
-                            if (hasPreviousMediaItem()) seekToPrevious()
-                        }
-                    },
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .padding(8.dp)
-                        .align(Alignment.CenterVertically),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_skipprevious_outline),
-                        contentDescription = "Skip to previous song"
-                    )
-                }
-                //暂停或开始----------------------
-                IconButton(
-                    onClick = {
-                        controller?.apply {
-                            if (this.isPlaying) pause() else play()
-                            Log.d("test", "${isPlaying}")
-                        }
-                    },
-                    modifier = Modifier
-                        .size(90.dp)
-                        .padding(8.dp)
-                        .align(Alignment.CenterVertically),
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        painter = if (isPlaying == true) painterResource(R.drawable.ic_pause)
-                            else painterResource(R.drawable.ic_play_outline),
-                        contentDescription = if (controller?.isPlaying == true) "Pause Button" else "Play Button"
-                    )
-                }
+@Composable
+fun ButtonBar() {
+    val activity = LocalActivity.current as? ComponentActivity ?: error("PlayScreen should be hosted in a Component Activity")
+    //Music Viewmodel
+    val musicPlayerViewModel: MusicPlayerViewModel = viewModel(viewModelStoreOwner = activity)
 
-                //跳到下一首----------------------
-                Button(
-                    onClick = {
-                        controller?.apply {
-                            if (hasNextMediaItem()) seekToNext()
-                        }
-                    },
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .padding(8.dp)
-                        .align(Alignment.CenterVertically),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_skipnext_outline),
-                        contentDescription = "Skip to next song"
-                    )
+    //播放器操控
+    val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+    val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
+    val isShuffleEnabled by musicPlayerViewModel.isShuffleEnabled.collectAsStateWithLifecycle()
+    val repeatMode by musicPlayerViewModel.repeatMode.collectAsStateWithLifecycle()
+    Row (
+        modifier = Modifier
+            .fillMaxWidth(),
+        //.border(width = 2.dp, color = Color.Blue),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.Top
+    ) {
+        IconButton(
+            onClick = {
+                musicPlayerViewModel.switchRepeatMode()
+            },
+            modifier = Modifier
+        ) {
+            Icon (
+                painter = when (repeatMode) {
+                    Player.REPEAT_MODE_OFF -> painterResource(R.drawable.ic_repeat_off)
+                    Player.REPEAT_MODE_ALL -> painterResource(R.drawable.ic_repeat_all)
+                    else -> painterResource(R.drawable.ic_repeat_one) //Player.REPEAT_MODE_ONE
+                },
+                contentDescription = when (repeatMode) {
+                    Player.REPEAT_MODE_OFF -> "Repeat mode off"
+                    Player.REPEAT_MODE_ALL -> "Repeat mode all"
+                    else -> "Repeat mode one"
                 }
+            )
+        }
+
+        //跳到上一首----------------------
+        IconButton(
+            onClick = {
+                musicPlayerViewModel.seekToPrevious()
+            },
+            shape = CircleShape,
+            modifier = Modifier
+                .size(80.dp)
+                .padding(8.dp)
+                .align(Alignment.CenterVertically)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_skipprevious_outline),
+                contentDescription = "Skip to previous song"
+            )
+        }
+        //暂停或开始----------------------
+        IconButton(
+            onClick = {
+                if (isPlaying == true) musicPlayerViewModel.pause() else musicPlayerViewModel.play()
+            },
+            modifier = Modifier
+                .size(90.dp)
+                .padding(8.dp)
+                .align(Alignment.CenterVertically),
+            shape = CircleShape
+        ) {
+            Icon(
+                painter = if (isPlaying == true) painterResource(R.drawable.ic_pause)
+                else painterResource(R.drawable.ic_play_outline),
+                contentDescription = if (controller?.isPlaying == true) "Pause Button" else "Play Button"
+            )
+        }
+
+        //跳到下一首----------------------
+        Button(
+            onClick = {
+                musicPlayerViewModel.seekToNext()
+            },
+            shape = CircleShape,
+            modifier = Modifier
+                .size(80.dp)
+                .padding(8.dp)
+                .align(Alignment.CenterVertically),
+            contentPadding = PaddingValues(0.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_skipnext_outline),
+                contentDescription = "Skip to next song"
+            )
+        }
+
+        //启用或者禁用随机------------------
+        IconButton(
+            onClick = {
+                musicPlayerViewModel.switchShuffledMode()
             }
+        ) {
+            Icon(
+                painter = if (isShuffleEnabled == true) painterResource(R.drawable.ic_shuffle)
+                    else painterResource(R.drawable.ic_shuffle_disabled),
+                contentDescription = "Shuffled"
+            )
         }
     }
 }
