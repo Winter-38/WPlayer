@@ -35,6 +35,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -55,6 +57,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.component1
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,7 +75,7 @@ import com.winter.wplayer.ui.theme.WPlayerTheme
 
 class MainActivity : ComponentActivity() {
 
-    companion object{
+    companion object {
         private const val TAG = "MainActivityAction"
     }
 
@@ -95,10 +98,11 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController, "home") {
                     composable("home") {
                         Column(modifier = Modifier.fillMaxSize()) {
+                            TopBar()
                             PlayList(Modifier.weight(1f))
                             Surface(
                                 modifier = Modifier
-                                    .weight(0.09f)
+                                    .height(90.dp)
                                     .padding(2.dp),
                                 shape = RoundedCornerShape(15.dp),
                                 color = Color.White
@@ -117,7 +121,55 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(UnstableApi::class)
+    @Composable
+    fun TopBar(){
+        var expended by remember { mutableStateOf(false) }
+        Column {
+            Spacer(Modifier.size(20.dp))
+            Row(Modifier.height(65.dp)){
+                Spacer(Modifier.size(10.dp))
+                Text(
+                    modifier = Modifier.align(Alignment.CenterVertically),
+                    fontSize = 25.sp,
+                    text = "WPlayer")
+                Spacer(Modifier.weight(1f))
+                IconButton(
+                    onClick = {
+                        expended = true
+                    },
+                    modifier = Modifier
+                        .size(50.dp)
+                        .align(Alignment.CenterVertically)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_dots),
+                        contentDescription = "Others"
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expended,
+                    onDismissRequest = { expended = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("sort by ...") },
+                        onClick = {
+                            expended = false
+                            //sort by ...
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("create new playlist") },
+                        onClick = {
+                            expended = false
+                            //create ...
+                        }
+                    )
+                }
+            }
+        }
+    }
+
     @Composable
     fun PlayList(modifier: Modifier){
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()

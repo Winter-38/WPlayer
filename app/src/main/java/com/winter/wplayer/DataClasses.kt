@@ -42,7 +42,10 @@ data class Playlist(
 
         )
     ],
-    indices = [Index("songId")]
+    indices = [
+        Index("songId"),
+        Index(value = ["playlistId", "pos"], unique = true)
+    ]
 )
 data class PlaylistSongCrossRef(
     val playlistId: Long,

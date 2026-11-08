@@ -20,7 +20,9 @@ import kotlin.collections.emptyList
 
 class MusicListViewModel
     (app: Application): AndroidViewModel(app) {
-    private val TAG = "MusicListViewModel"
+    companion object {
+        private const val TAG = "MainActivity"
+    }
     private val database = AppDataBase.get(application)
     private val songDao = database.songDao()
     private val playlistDao = database.playlistDao()
