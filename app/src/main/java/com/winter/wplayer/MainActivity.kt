@@ -36,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -121,14 +122,14 @@ class MainActivity : ComponentActivity() {
     fun PlayList(modifier: Modifier){
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val items = musicListViewModel.songLists.collectAsStateWithLifecycle().value.map { MediaItem.fromUri(it.uri) }
-        val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+        val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
 
         //检测items和controller值变化，防止异步错误
-        LaunchedEffect( items, controller) {
+        LaunchedEffect( items) {
             //检测controller不为null并且做播放前准备，添加isPlaying判断防止重进app打断播放
-            if (controller != null && !(controller?.isPlaying ?: true)) {
-                controller?.setMediaItems(items, 0, 0) //默认为第一首歌曲
-                controller?.prepare()
+            if (musicPlayerViewModel.notNull() && isPlaying != true) {
+                musicPlayerViewModel.setMediaItems(items, 0, 0L) //默认为第一首歌曲
+                musicPlayerViewModel.prepare()
             }
         }
 
@@ -143,12 +144,7 @@ class MainActivity : ComponentActivity() {
                             shape = RoundedCornerShape(8.dp)
                         )
                         .clickable {
-                            if (controller != null) {
-                                controller?.apply {
-                                    seekTo(index, 0L)
-                                    play()
-                                }
-                            }
+                            musicPlayerViewModel.seekTo(index, 0L)
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -174,7 +170,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(UnstableApi::class)
     @Composable
     fun PlayBar(onNavToDetail: () -> Unit){
-        val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+        val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
         val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
@@ -208,19 +204,20 @@ class MainActivity : ComponentActivity() {
                         velocity = 30.dp
                     )
             )
-            Button(
+            IconButton(
                 onClick = {
-                    controller?.apply {
-                        if (isPlaying) pause()
-                        else play()
+                    if (isPlaying == true) {
+                        musicPlayerViewModel.pause()
+                    } else {
+                        musicPlayerViewModel.play()
                     }
                 },
                 modifier = Modifier.weight(0.2f),
-                shape = CircleShape,
-                contentPadding = PaddingValues(0.dp)
+                shape = CircleShape
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.ic_play_outline),
+                    painter = if (isPlaying == true) painterResource(R.drawable.ic_pause)
+                        else painterResource(R.drawable.ic_play_outline),
                     contentDescription = "play_button"
                 )
             }

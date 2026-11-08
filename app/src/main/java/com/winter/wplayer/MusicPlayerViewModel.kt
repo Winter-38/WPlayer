@@ -19,7 +19,7 @@ import kotlinx.coroutines.sync.withLock
 
 class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     companion object {
-        private val TAG = "MusicPlayerVM"
+        private const val TAG = "MusicPlayerVM"
     }
     private val buildMutex = Mutex()
     private var _controller = MutableStateFlow<MediaController?>(null)
@@ -33,29 +33,53 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     val isShuffleEnabled = _isShuffleEnabled.asStateFlow()
 
 
-    fun play() {
+    fun notNull(): Boolean{
         if (_controller.value != null) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    fun prepare(){
+        if (notNull()){
+            _controller.value!!.prepare()
+        }
+    }
+    fun play() {
+        if (notNull()) {
             _controller.value!!.play()
         }
     }
 
     fun pause() {
-        if (_controller.value != null) {
+        if (notNull()) {
             _controller.value!!.pause()
         }
     }
     fun seekToPrevious() {
-        if (_controller.value != null && _controller.value!!.hasPreviousMediaItem()) {
+        if (notNull() && _controller.value!!.hasPreviousMediaItem()) {
             _controller.value!!.seekToPrevious()
         }
     }
 
     fun seekToNext() {
-        if (_controller.value != null && _controller.value!!.hasNextMediaItem()) {
+        if (notNull() && _controller.value!!.hasNextMediaItem()) {
             _controller.value!!.seekToNext()
         }
     }
 
+    fun seekTo(mediaItemIndex: Int, posMs: Long){
+        if (notNull()){
+            _controller.value!!.seekTo(mediaItemIndex, posMs)
+        }
+    }
+
+    fun setMediaItems(mediaItems: List<MediaItem>, startIndex: Int, posMs: Long){
+        if (notNull()){
+            _controller.value!!.setMediaItems(mediaItems, startIndex, posMs)
+        }
+    }
     fun switchRepeatMode() {
         val controller = _controller.value ?: return
         controller.repeatMode = when (controller.repeatMode) {

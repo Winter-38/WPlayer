@@ -1,6 +1,7 @@
 package com.winter.wplayer.ui
 
 import android.util.Log
+import android.widget.Space
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.basicMarquee
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFrom
@@ -53,11 +55,6 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
     val activity = LocalActivity.current as? ComponentActivity ?: error("PlayScreen should be hosted in a Component Activity")
     //引用activity viewmodel
     val musicListViewModel: MusicListViewModel = viewModel(viewModelStoreOwner = activity)
-    val musicPlayerViewModel: MusicPlayerViewModel = viewModel(viewModelStoreOwner = activity)
-
-    //播放器操控
-    val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
-    val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
     //播放列表&歌曲索引
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
     val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
@@ -150,6 +147,7 @@ fun ButtonBar() {
 
     //播放器操控
     val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+
     val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
     val isShuffleEnabled by musicPlayerViewModel.isShuffleEnabled.collectAsStateWithLifecycle()
     val repeatMode by musicPlayerViewModel.repeatMode.collectAsStateWithLifecycle()
@@ -160,11 +158,15 @@ fun ButtonBar() {
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.Top
     ) {
+        //切换循环模式-------------------
         IconButton(
             onClick = {
                 musicPlayerViewModel.switchRepeatMode()
             },
-            modifier = Modifier
+            modifier =  Modifier
+                .size(80.dp)
+                .padding(8.dp)
+                .align(Alignment.CenterVertically)
         ) {
             Icon (
                 painter = when (repeatMode) {
@@ -215,7 +217,7 @@ fun ButtonBar() {
         }
 
         //跳到下一首----------------------
-        Button(
+        IconButton(
             onClick = {
                 musicPlayerViewModel.seekToNext()
             },
@@ -223,8 +225,7 @@ fun ButtonBar() {
             modifier = Modifier
                 .size(80.dp)
                 .padding(8.dp)
-                .align(Alignment.CenterVertically),
-            contentPadding = PaddingValues(0.dp)
+                .align(Alignment.CenterVertically)
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_skipnext_outline),
@@ -236,7 +237,11 @@ fun ButtonBar() {
         IconButton(
             onClick = {
                 musicPlayerViewModel.switchShuffledMode()
-            }
+            },
+            modifier =  Modifier
+                .size(80.dp)
+                .padding(8.dp)
+                .align(Alignment.CenterVertically)
         ) {
             Icon(
                 painter = if (isShuffleEnabled == true) painterResource(R.drawable.ic_shuffle)
@@ -244,5 +249,6 @@ fun ButtonBar() {
                 contentDescription = "Shuffled"
             )
         }
+        Spacer(Modifier.fillMaxWidth().height(180.dp))
     }
 }
