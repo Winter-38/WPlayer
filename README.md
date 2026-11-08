@@ -13,7 +13,7 @@ and it will implement more features in the future
 ## Features
 
 1. Play local audios
-2. More features in development ...
+2. Switch shuffle mode & repeat mode
 
 ## Quick start
 
