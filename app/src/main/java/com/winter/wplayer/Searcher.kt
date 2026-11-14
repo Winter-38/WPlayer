@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
 
 class Searcher(context: Context) {
     val audioList = mutableListOf<Song>()
@@ -46,7 +47,7 @@ class Searcher(context: Context) {
                 )
                 val coverId = c.getLong(coverCol)
                 val coverUri = ContentUris.withAppendedId(
-                    Uri.parse("content://media/external/audio/albumart"),coverId
+                    "content://media/external/audio/albumart".toUri(),coverId
                 )
                 audioList.add(
                     Song(

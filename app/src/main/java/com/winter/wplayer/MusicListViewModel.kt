@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,9 +46,12 @@ class MusicListViewModel
         )
 
     init {
+
+    }
+    fun search() {
         if (!_loaded.value) {
             viewModelScope.launch {
-                val searcher = Searcher(app)
+                val searcher = Searcher(application)
                 val list = searcher.queryAudioList(application)
                 songDao.insertAll(list)
                 _loaded.value = true
