@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -16,6 +17,7 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,6 +38,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,6 +62,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.winter.wplayer.ui.CreatePlayList
 import com.winter.wplayer.ui.PlayScreen
 import com.winter.wplayer.ui.theme.ListBackgroundColor
 import com.winter.wplayer.ui.theme.WPlayerTheme
@@ -72,17 +76,19 @@ class MainActivity : ComponentActivity() {
 
     val musicListViewModel: MusicListViewModel by viewModels()
     val musicPlayerViewModel: MusicPlayerViewModel by viewModels()
-
+    private var test = false
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        test = true
         enableEdgeToEdge()
         setContent {
             WPlayerTheme {
                 LaunchedEffect(Unit) {
                     musicPlayerViewModel.buildController()
+
                 }
                 val navController = rememberNavController()
                 RequestPermission( { musicListViewModel.search() } )
@@ -115,6 +121,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun TopBar(){
         var expended by remember { mutableStateOf(false) }
+        var showCreate by remember { mutableStateOf(false) }
         Column {
             Spacer(Modifier.size(20.dp))
             Row(Modifier.height(65.dp)){
@@ -124,37 +131,51 @@ class MainActivity : ComponentActivity() {
                     fontSize = 25.sp,
                     text = "WPlayer")
                 Spacer(Modifier.weight(1f))
-                IconButton(
-                    onClick = {
-                        expended = true
-                    },
-                    modifier = Modifier
-                        .size(50.dp)
-                        .align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_dots),
-                        contentDescription = "Others"
-                    )
-                }
+                Box(
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                ){
+                    IconButton(
+                        onClick = {
+                            expended = true
+                        },
+                        modifier = Modifier
+                            .size(50.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_dots),
+                            contentDescription = "Others"
+                        )
+                    }
 
-                DropdownMenu(
-                    expanded = expended,
-                    onDismissRequest = { expended = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("sort by ...") },
-                        onClick = {
-                            expended = false
-                            //sort by ...
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("create new playlist") },
-                        onClick = {
-                            expended = false
-                            //create ...
-                        }
+                    DropdownMenu(
+                        expanded = expended,
+                        onDismissRequest = { expended = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Sort by ...") },
+                            onClick = {
+                                expended = false
+                                //sort by ...
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Create new playlist") },
+                            onClick = {
+                                expended = false
+                                showCreate = true
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Settings") },
+                            onClick = {
+                                expended = false
+                            }
+                        )
+                    }
+                    CreatePlayList(
+                        show = showCreate,
+                        onDismiss = { showCreate = false },
+                        onConfirm = { name -> musicListViewModel.createPlaylist(name = name) }
                     )
                 }
             }
@@ -165,15 +186,10 @@ class MainActivity : ComponentActivity() {
     fun PlayList(modifier: Modifier){
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val items = musicListViewModel.songLists.collectAsStateWithLifecycle().value.map { MediaItem.fromUri(it.uri) }
-        val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
 
         //检测items和controller值变化，防止异步错误
         LaunchedEffect( items) {
-            //检测controller不为null并且做播放前准备，添加isPlaying判断防止重进app打断播放
-            if (musicPlayerViewModel.notNull() && isPlaying != true) {
-                musicPlayerViewModel.setMediaItems(items, 0, 0L) //默认为第一首歌曲
-                musicPlayerViewModel.prepare()
-            }
+            musicPlayerViewModel.initMedia(items)
         }
 
         LazyColumn(modifier) {

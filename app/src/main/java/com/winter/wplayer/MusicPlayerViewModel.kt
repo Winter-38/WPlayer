@@ -22,6 +22,8 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         private const val TAG = "MusicPlayerVM"
     }
     private val buildMutex = Mutex()
+
+    private var mediaInitialized = false
     private var _controller = MutableStateFlow<MediaController?>(null)
     val controller = _controller.asStateFlow()
 
@@ -34,11 +36,7 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
 
 
     fun notNull(): Boolean{
-        if (_controller.value != null) {
-            return true
-        } else {
-            return false
-        }
+        return _controller.value != null
     }
 
     fun prepare(){
@@ -127,6 +125,15 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
                 ContextCompat.getMainExecutor(context)
             )
         }
+    }
+
+    fun initMedia(items: List<MediaItem>){
+        if (mediaInitialized) return
+        if (items.isEmpty()) return
+        val controller = _controller.value ?: return
+        controller.setMediaItems(items, 0, 0L)
+        controller.prepare()
+        mediaInitialized = true
     }
 
     override fun onCleared() {

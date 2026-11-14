@@ -44,10 +44,6 @@ class MusicListViewModel
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-
-    init {
-
-    }
     fun search() {
         if (!_loaded.value) {
             viewModelScope.launch {
