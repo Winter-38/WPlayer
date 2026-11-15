@@ -7,6 +7,7 @@ import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import javax.annotation.meta.When
 
 class Searcher(context: Context) {
     val audioList = mutableListOf<Song>()
@@ -22,13 +23,24 @@ class Searcher(context: Context) {
         MediaStore.Audio.Media.DURATION
     )
 
-    suspend fun queryAudioList(context: Context): List<Song> = withContext(Dispatchers.IO) {
+    suspend fun queryAudioList(context: Context, order: String, sort: String): List<Song> = withContext(Dispatchers.IO) {
         val cursor = context.contentResolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             projection,
             selection,
             null,
-            "${MediaStore.Audio.Media.DURATION} ASC"
+            when (order) {
+                "TITLE" -> MediaStore.Audio.Media.TITLE
+                "DATE_ADDED" -> MediaStore.Audio.Media.DATE_ADDED
+                "DATE_MODIFIED" -> MediaStore.Audio.Media.DATE_MODIFIED
+                "SIZE" -> MediaStore.Audio.Media.SIZE
+                "ARTIST" -> MediaStore.Audio.Media.ARTIST
+                else -> MediaStore.Audio.Media.TITLE
+            } + when (sort) {
+                "ASC" -> " ASC"
+                "DESC" -> " DESC"
+                else -> " ASC"
+            }
         )
 
 
