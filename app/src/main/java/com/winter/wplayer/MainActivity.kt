@@ -76,13 +76,11 @@ class MainActivity : ComponentActivity() {
 
     val musicListViewModel: MusicListViewModel by viewModels()
     val musicPlayerViewModel: MusicPlayerViewModel by viewModels()
-    private var test = false
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        test = true
         enableEdgeToEdge()
         setContent {
             WPlayerTheme {

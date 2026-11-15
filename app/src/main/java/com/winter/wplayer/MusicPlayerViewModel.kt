@@ -5,15 +5,22 @@ import android.content.ComponentName
 import android.content.Context
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.datastore.dataStore
+import androidx.datastore.dataStoreFile
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
+import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.guava.await
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -27,6 +34,9 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     private var _controller = MutableStateFlow<MediaController?>(null)
     val controller = _controller.asStateFlow()
 
+    private val datastore = app.dataStore
+    private var isRestoring = false
+
     private val _isPlaying = MutableStateFlow<Boolean?>(false)
     val isPlaying = _isPlaying.asStateFlow()
     private val _repeatMode = MutableStateFlow(Player.REPEAT_MODE_OFF)
@@ -35,48 +45,34 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     val isShuffleEnabled = _isShuffleEnabled.asStateFlow()
 
 
-    fun notNull(): Boolean{
-        return _controller.value != null
-    }
 
-    fun prepare(){
-        if (notNull()){
-            _controller.value!!.prepare()
-        }
-    }
     fun play() {
-        if (notNull()) {
-            _controller.value!!.play()
-        }
+        val controller = _controller.value ?: return
+        controller.play()
     }
 
     fun pause() {
-        if (notNull()) {
-            _controller.value!!.pause()
-        }
+        val controller = _controller.value ?: return
+        controller.pause()
     }
     fun seekToPrevious() {
-        if (notNull() && _controller.value!!.hasPreviousMediaItem()) {
-            _controller.value!!.seekToPrevious()
-        }
+        val controller = _controller.value ?: return
+        if (controller.hasPreviousMediaItem()) controller.seekToPrevious()
     }
 
     fun seekToNext() {
-        if (notNull() && _controller.value!!.hasNextMediaItem()) {
-            _controller.value!!.seekToNext()
-        }
+        val controller = _controller.value ?: return
+        if (controller.hasNextMediaItem()) controller.seekToNext()
     }
 
     fun seekTo(mediaItemIndex: Int, posMs: Long){
-        if (notNull()){
-            _controller.value!!.seekTo(mediaItemIndex, posMs)
-        }
+        val controller = _controller.value ?: return
+        controller.seekTo(mediaItemIndex, posMs)
     }
 
     fun setMediaItems(mediaItems: List<MediaItem>, startIndex: Int, posMs: Long){
-        if (notNull()){
-            _controller.value!!.setMediaItems(mediaItems, startIndex, posMs)
-        }
+        val controller = _controller.value ?: return
+        controller.setMediaItems(mediaItems, startIndex, posMs)
     }
     fun switchRepeatMode() {
         val controller = _controller.value ?: return
@@ -111,14 +107,25 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
                     _controller.value?.addListener(object : Player.Listener {
                         override fun onIsPlayingChanged(isPlaying: Boolean) {
                             _isPlaying.value = isPlaying
+
                         }
 
                         override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
                             _isShuffleEnabled.value = shuffleModeEnabled
+                            if (!isRestoring) {
+                                viewModelScope.launch {
+                                    datastore.edit { it[ConfigHolder.SHUFFLE] = shuffleModeEnabled }
+                                }
+                            }
                         }
 
                         override fun onRepeatModeChanged(repeatMode: Int) {
                             _repeatMode.value = repeatMode
+                            if (!isRestoring) {
+                                viewModelScope.launch {
+                                    datastore.edit { it[ConfigHolder.REPEAT_MODE] = repeatMode }
+                                }
+                            }
                         }
                     })
                 },
@@ -133,6 +140,15 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         val controller = _controller.value ?: return
         controller.setMediaItems(items, 0, 0L)
         controller.prepare()
+
+        viewModelScope.launch {
+            val config = datastore.data.first()
+            isRestoring = true
+            controller.repeatMode = config[ConfigHolder.REPEAT_MODE] ?: Player.REPEAT_MODE_OFF
+            controller.shuffleModeEnabled = config[ConfigHolder.SHUFFLE] ?: false
+            isRestoring = false
+        }
+
         mediaInitialized = true
     }
 
