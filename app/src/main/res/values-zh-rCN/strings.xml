@@ -22,6 +22,7 @@
     <string name="create_playlist">创建播放列表</string>
     <string name="playlist_name">列表名称</string>
     <string name="confirm">确定</string>
+    <string name="confirm_danger">你确定要这么做?</string>
     <string name="cancel">取消</string>
     <string name="delete">删除</string>
     <string name="others">其他</string>

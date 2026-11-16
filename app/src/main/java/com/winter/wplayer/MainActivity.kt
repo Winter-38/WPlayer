@@ -133,7 +133,10 @@ class MainActivity : ComponentActivity() {
                     composable("playlist_manage_screen") {
                         PlaylistManageScreen(
                             musicListViewModel = musicListViewModel,
-                            onNavToDetail = { navController.popBackStack() }
+                            onNavToDetail = { navController.popBackStack() },
+                            onRemove = { m, id->
+                                m.removePlaylist(id)
+                            }
                         )
                     }
                 }

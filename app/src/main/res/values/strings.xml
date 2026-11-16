@@ -21,6 +21,7 @@
     <string name="create_playlist">Create new playlist</string>
     <string name="playlist_name">Playlist name</string>
     <string name="confirm">Confirm</string>
+    <string name="confirm_danger">Are you sure?</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <string name="others">Others</string>

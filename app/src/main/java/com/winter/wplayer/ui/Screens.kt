@@ -60,6 +60,7 @@ import coil3.Image
 import coil3.compose.AsyncImage
 import com.winter.wplayer.IndexHolder
 import com.winter.wplayer.MusicListViewModel
+import com.winter.wplayer.MusicListViewModelFactory
 import com.winter.wplayer.MusicPlayerViewModel
 import com.winter.wplayer.R
 import com.winter.wplayer.room.Playlist
@@ -301,8 +302,9 @@ fun CreatePlayList(
 }
 
 @Composable
-fun PlaylistManageScreen(musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
+fun PlaylistManageScreen(musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit, onRemove: (MusicListViewModel, Long) -> Unit){
     val playlists by musicListViewModel.playlists.collectAsStateWithLifecycle()
+    var showDialog by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.size(35.dp))
@@ -314,7 +316,7 @@ fun PlaylistManageScreen(musicListViewModel: MusicListViewModel, onNavToDetail: 
                 contentDescription = stringResource(R.string.back_button)
             )
         }
-        LazyColumn() {
+        LazyColumn {
             itemsIndexed(playlists){ index, playlist ->
                 Row (
                     modifier = Modifier.padding(vertical = 20.dp)
@@ -340,7 +342,7 @@ fun PlaylistManageScreen(musicListViewModel: MusicListViewModel, onNavToDetail: 
                     Spacer(modifier = Modifier.weight(1f))
                     Button(
                         onClick = {
-                            musicListViewModel.removePlaylist(playlist.playlistId)
+                            showDialog = true
                         }
                     ) {
                         Icon(
@@ -348,6 +350,30 @@ fun PlaylistManageScreen(musicListViewModel: MusicListViewModel, onNavToDetail: 
                             contentDescription = stringResource(R.string.delete)
                         )
                     }
+                }
+                if (showDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDialog = false },
+                        title = { Text( stringResource(R.string.confirm) ) },
+                        text = {Text( stringResource(R.string.confirm_danger ))},
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showDialog = false
+                                    onRemove(musicListViewModel, playlist.playlistId)
+                                }
+                            ) {
+                                Text(stringResource(R.string.confirm))
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showDialog = false }
+                            ) {
+                                Text(stringResource(R.string.cancel))
+                            }
+                        }
+                    )
                 }
             }
         }
