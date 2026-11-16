@@ -6,7 +6,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -38,7 +37,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,8 +64,8 @@ import androidx.room.Room
 import coil3.compose.AsyncImage
 import com.winter.wplayer.room.AppDataBase
 import com.winter.wplayer.room.PlaylistRepository
-import com.winter.wplayer.ui.CreatePlayList
 import com.winter.wplayer.ui.PlayScreen
+import com.winter.wplayer.ui.CreatePlayList
 import com.winter.wplayer.ui.PlaylistManageScreen
 import com.winter.wplayer.ui.theme.ListBackgroundColor
 import com.winter.wplayer.ui.theme.WPlayerTheme

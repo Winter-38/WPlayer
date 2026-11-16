@@ -1,51 +1,30 @@
 package com.winter.wplayer.ui
 
-import android.text.BoringLayout
-import android.util.Log
-import android.widget.Space
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fitInside
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFrom
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,15 +34,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.Player
-import androidx.room.util.TableInfo
-import coil3.Image
 import coil3.compose.AsyncImage
 import com.winter.wplayer.IndexHolder
 import com.winter.wplayer.MusicListViewModel
-import com.winter.wplayer.MusicListViewModelFactory
 import com.winter.wplayer.MusicPlayerViewModel
 import com.winter.wplayer.R
-import com.winter.wplayer.room.Playlist
 
 @Composable
 fun PlayScreen(onNavToDetail: () -> Unit) {
@@ -142,7 +117,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                         repeatDelayMillis = 500,
                         initialDelayMillis = 500,
                         velocity = 30.dp
-                ),
+                    ),
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,
                 text = (songs.getOrNull(songIndex)?.artist ?: stringResource(R.string.unknown_artist))
@@ -259,123 +234,11 @@ fun ButtonBar() {
         ) {
             Icon(
                 painter = if (isShuffleEnabled == true) painterResource(R.drawable.ic_shuffle)
-                    else painterResource(R.drawable.ic_shuffle_disabled),
+                else painterResource(R.drawable.ic_shuffle_disabled),
                 contentDescription = if (isShuffleEnabled == true) stringResource(R.string.shuffle_enabled_button)
-                    else stringResource(R.string.shuffle_disabled_button)
+                else stringResource(R.string.shuffle_disabled_button)
             )
         }
         Spacer(Modifier.fillMaxWidth().height(180.dp))
-    }
-}
-
-@Composable
-fun CreatePlayList(
-    show: Boolean,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    if (!show) return
-    var text by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.create_playlist)) },
-        text = {
-            TextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text(stringResource(R.string.playlist_name)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(text.trim()) },
-                enabled = text.isNotBlank()
-            ) { Text(stringResource(R.string.confirm)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        }
-    )
-}
-
-@Composable
-fun PlaylistManageScreen(musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit, onRemove: (MusicListViewModel, Long) -> Unit){
-    val playlists by musicListViewModel.playlists.collectAsStateWithLifecycle()
-    var showDialog by remember { mutableStateOf(false) }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        Spacer(modifier = Modifier.size(35.dp))
-        Button(
-            onClick = { onNavToDetail() }
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_arrow_left),
-                contentDescription = stringResource(R.string.back_button)
-            )
-        }
-        LazyColumn {
-            itemsIndexed(playlists){ index, playlist ->
-                Row (
-                    modifier = Modifier.padding(vertical = 20.dp)
-                ){
-                    Spacer(modifier = Modifier.size(10.dp))
-                    Text(
-                        text = "${index + 1}",
-                        fontSize = 20.sp,
-                        modifier = Modifier
-                    )
-                    Spacer(modifier = Modifier.size(10.dp))
-                    AsyncImage(
-                        model = playlist.coverUri,
-                        contentDescription = stringResource(R.string.playlist_cover),
-                        error = painterResource(R.drawable.ic_play_outline),
-                        fallback = painterResource(R.drawable.ic_play_outline)
-                    )
-                    Spacer(modifier = Modifier.size(70.dp))
-                    Text(
-                        text = playlist.name,
-                        fontSize = 20.sp
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        onClick = {
-                            showDialog = true
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_delete_outline),
-                            contentDescription = stringResource(R.string.delete)
-                        )
-                    }
-                }
-                if (showDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDialog = false },
-                        title = { Text( stringResource(R.string.confirm) ) },
-                        text = {Text( stringResource(R.string.confirm_danger ))},
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showDialog = false
-                                    onRemove(musicListViewModel, playlist.playlistId)
-                                }
-                            ) {
-                                Text(stringResource(R.string.confirm))
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(
-                                onClick = { showDialog = false }
-                            ) {
-                                Text(stringResource(R.string.cancel))
-                            }
-                        }
-                    )
-                }
-            }
-        }
     }
 }
