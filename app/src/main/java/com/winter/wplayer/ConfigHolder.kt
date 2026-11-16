@@ -12,4 +12,5 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "co
 object ConfigHolder {
     val REPEAT_MODE = intPreferencesKey("repeat_mode")
     val SHUFFLE = booleanPreferencesKey("shuffle_enabled")
+    val MEDIA_LOADED = booleanPreferencesKey("media_loaded")
 }

@@ -3,6 +3,7 @@ package com.winter.wplayer
 import android.app.Application
 import android.net.Uri
 import androidx.annotation.OptIn
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.application
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import com.winter.wplayer.room.PlaylistRepository
 import com.winter.wplayer.room.Song
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.collections.emptyList
@@ -21,6 +23,7 @@ class MusicListViewModel(
     private val repo: PlaylistRepository
 ): AndroidViewModel(app) {
     private var _loaded = false
+    private val dataStore = app.dataStore
 
 
     val songLists: StateFlow<List<Song>> = repo
@@ -38,13 +41,15 @@ class MusicListViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-    fun search() {
-        if (!_loaded) {
-            viewModelScope.launch {
+    fun search(order: String, sort: String) {
+        viewModelScope.launch {
+            val loaded = dataStore.data.first()
+            _loaded = loaded[ConfigHolder.MEDIA_LOADED] ?: false
+            if (!_loaded) {
                 val searcher = Searcher(application)
-                val songs = searcher.queryAudioList(application, "TITLE", "ASC")
+                val songs = searcher.queryAudioList(application, order, sort)
                 repo.insertSongs(songs)
-                _loaded = true
+                dataStore.edit { it[ConfigHolder.MEDIA_LOADED] = true }
             }
         }
     }
