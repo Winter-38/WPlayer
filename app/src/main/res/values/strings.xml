@@ -5,6 +5,7 @@
     <string name="back_button">Back to last screen</string>
     <string name="song_cover">Full song cover</string>
     <string name="mini_song_cover">Mini song cover</string>
+    <string name="playlist_cover">Playlist Cover</string>
     <string name="unknown_title">Unknown title</string>
     <string name="unknown_artist">Unknown artist</string>
     <string name="play_button">Play</string>

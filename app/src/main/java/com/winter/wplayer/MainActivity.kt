@@ -68,6 +68,7 @@ import com.winter.wplayer.room.AppDataBase
 import com.winter.wplayer.room.PlaylistRepository
 import com.winter.wplayer.ui.CreatePlayList
 import com.winter.wplayer.ui.PlayScreen
+import com.winter.wplayer.ui.PlaylistManageScreen
 import com.winter.wplayer.ui.theme.ListBackgroundColor
 import com.winter.wplayer.ui.theme.WPlayerTheme
 
@@ -109,7 +110,9 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController, "home") {
                     composable("home") {
                         Column(modifier = Modifier.fillMaxSize()) {
-                            TopBar()
+                            TopBar {
+                                navController.navigate("playlist_manage_screen") { launchSingleTop = true }
+                            }
                             PlayList(Modifier.weight(1f))
                             Surface(
                                 modifier = Modifier
@@ -127,13 +130,16 @@ class MainActivity : ComponentActivity() {
                     composable("play_screen") {
                         PlayScreen{ navController.popBackStack() }
                     }
+                    composable("playlist_manage_screen") {
+                        PlaylistManageScreen(musicListViewModel) { navController.popBackStack() }
+                    }
                 }
             }
         }
     }
 
     @Composable
-    fun TopBar(){
+    fun TopBar(onNavToDetail: () -> Unit){
         var expended by remember { mutableStateOf(false) }
         var showCreate by remember { mutableStateOf(false) }
         Column {
@@ -184,13 +190,17 @@ class MainActivity : ComponentActivity() {
                             text = { Text(stringResource(R.string.settings)) },
                             onClick = {
                                 expended = false
+                                onNavToDetail()
                             }
                         )
                     }
                     CreatePlayList(
                         show = showCreate,
                         onDismiss = { showCreate = false },
-                        onConfirm = { name -> musicListViewModel.createPlaylist(name = name, coverUri = null) }
+                        onConfirm = { name ->
+                            musicListViewModel.createPlaylist(name = name, coverUri = null)
+                            showCreate = false
+                        }
                     )
                 }
             }
@@ -226,6 +236,8 @@ class MainActivity : ComponentActivity() {
                     AsyncImage(
                         model = songs.get(index).coverUri,
                         contentDescription = stringResource(R.string.mini_song_cover),
+                        error = painterResource(R.drawable.ic_play_outline),
+                        fallback = painterResource(R.drawable.ic_play_outline),
                         modifier = Modifier.align(Alignment.CenterVertically).weight(3f)
                     )
 
@@ -261,6 +273,8 @@ class MainActivity : ComponentActivity() {
             AsyncImage(
                 model = coverUri,
                 contentDescription = stringResource(R.string.mini_song_cover),
+                error = painterResource(R.drawable.ic_play_outline),
+                fallback = painterResource(R.drawable.ic_play_outline),
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .weight(0.21f)

@@ -37,5 +37,5 @@ class Converters {
     fun fromUri(uri: Uri?): String? = uri?.toString()
 
     @TypeConverter
-    fun toUri(string: String?): Uri? = string.let { Uri.parse(it) }
+    fun toUri(string: String?): Uri? = string?.let { Uri.parse(it) }
 }

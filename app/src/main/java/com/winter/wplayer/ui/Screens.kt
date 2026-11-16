@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fitInside
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -23,9 +24,11 @@ import androidx.compose.foundation.layout.paddingFrom
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,11 +56,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.Player
 import androidx.room.util.TableInfo
+import coil3.Image
 import coil3.compose.AsyncImage
 import com.winter.wplayer.IndexHolder
 import com.winter.wplayer.MusicListViewModel
 import com.winter.wplayer.MusicPlayerViewModel
 import com.winter.wplayer.R
+import com.winter.wplayer.room.Playlist
 
 @Composable
 fun PlayScreen(onNavToDetail: () -> Unit) {
@@ -92,6 +97,8 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
             AsyncImage(
                 model = coverUri,
                 contentDescription = stringResource(R.string.song_cover),
+                error = painterResource(R.drawable.ic_play_outline),
+                fallback = painterResource(R.drawable.ic_play_outline),
                 modifier = Modifier
                     .size(300.dp)
                     .clip(RoundedCornerShape(12.dp))
@@ -291,4 +298,43 @@ fun CreatePlayList(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
+}
+
+@Composable
+fun PlaylistManageScreen(playlistViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
+    val playlists by playlistViewModel.playlists.collectAsStateWithLifecycle()
+    Column(modifier = Modifier.fillMaxSize()) {
+        Spacer(modifier = Modifier.size(35.dp))
+        Button(
+            onClick = { onNavToDetail() }
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_left),
+                contentDescription = stringResource(R.string.back_button)
+            )
+        }
+        LazyColumn() {
+            itemsIndexed(playlists){ index, playlist ->
+                Row (
+                    modifier = Modifier.padding(vertical = 20.dp)
+                ){
+                    Spacer(modifier = Modifier.size(10.dp))
+                    Text(
+                        text = "${index + 1}",
+
+                        modifier = Modifier
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
+                    AsyncImage(
+                        model = playlist.coverUri,
+                        contentDescription = stringResource(R.string.playlist_cover),
+                        error = painterResource(R.drawable.ic_play_outline),
+                        fallback = painterResource(R.drawable.ic_play_outline)
+                    )
+                    Spacer(modifier = Modifier.size(70.dp))
+                    Text(playlist.name)
+                }
+            }
+        }
+    }
 }
