@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WPlayer</string>
+    <string name="need_permission">需要权限</string>
+    <string name="no_permission">这个应用需要权限运行</string>
+    <string name="back_button">返回上一界面</string>
+    <string name="song_cover">完整歌曲封面</string>
+    <string name="mini_song_cover">小歌曲封面</string>
+    <string name="unknown_title">未知标题</string>
+    <string name="unknown_artist">未知艺术家</string>
+    <string name="play_button">播放</string>
+    <string name="pause_button">停止</string>
+    <string name="previous_button">上一首</string>
+    <string name="next_button">下一首</string>
+    <string name="shuffle_enabled_button">随机播放开启</string>
+    <string name="shuffle_disabled_button">随机播放关闭</string>
+    <string name="repeat_off">循环模式已关闭</string>
+    <string name="repeat_all">循环模式已开启</string>
+    <string name="repeat_one">单曲循环</string>
+    <string name="sort">排序</string>
+    <string name="create_playlist">创建播放列表</string>
+    <string name="playlist_name">列表名称</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="others">其他</string>
+    <string name="settings">设置</string>
+</resources>

@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -118,12 +119,12 @@ class MainActivity : ComponentActivity() {
                                 color = Color.White
                             ) {
                                 PlayBar {
-                                    navController.navigate("play-screen") { launchSingleTop = true }
+                                    navController.navigate("play_screen") { launchSingleTop = true }
                                 }
                             }
                         }
                     }
-                    composable("play-screen") {
+                    composable("play_screen") {
                         PlayScreen{ navController.popBackStack() }
                     }
                 }
@@ -142,7 +143,8 @@ class MainActivity : ComponentActivity() {
                 Text(
                     modifier = Modifier.align(Alignment.CenterVertically),
                     fontSize = 25.sp,
-                    text = "WPlayer")
+                    text = stringResource(R.string.app_name)
+                )
                 Spacer(Modifier.weight(1f))
                 Box(
                     modifier = Modifier.align(Alignment.CenterVertically)
@@ -156,7 +158,7 @@ class MainActivity : ComponentActivity() {
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_dots),
-                            contentDescription = "Others"
+                            contentDescription = stringResource(R.string.others)
                         )
                     }
 
@@ -165,21 +167,21 @@ class MainActivity : ComponentActivity() {
                         onDismissRequest = { expended = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Sort by ...") },
+                            text = { Text(stringResource(R.string.sort)) },
                             onClick = {
                                 expended = false
                                 //sort by ...
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Create new playlist") },
+                            text = { Text(stringResource(R.string.create_playlist)) },
                             onClick = {
                                 expended = false
                                 showCreate = true
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Settings") },
+                            text = { Text(stringResource(R.string.settings)) },
                             onClick = {
                                 expended = false
                             }
@@ -223,7 +225,7 @@ class MainActivity : ComponentActivity() {
                     Spacer(modifier = Modifier.weight(1f))
                     AsyncImage(
                         model = songs.get(index).coverUri,
-                        contentDescription = "cover of each songs",
+                        contentDescription = stringResource(R.string.mini_song_cover),
                         modifier = Modifier.align(Alignment.CenterVertically).weight(3f)
                     )
 
@@ -246,7 +248,8 @@ class MainActivity : ComponentActivity() {
         val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
         val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
         val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
-        val title = (songs.getOrNull(songIndex)?.title ?: "unknown title") + " - " + (songs.getOrNull(songIndex)?.artist ?: "unknown artist")
+        val title = (songs.getOrNull(songIndex)?.title ?: stringResource(R.string.unknown_title)) +
+                " - " + (songs.getOrNull(songIndex)?.artist ?: stringResource(R.string.unknown_artist))
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -257,7 +260,7 @@ class MainActivity : ComponentActivity() {
             Spacer(modifier = Modifier.size(16.dp))
             AsyncImage(
                 model = coverUri,
-                contentDescription = "cover of the playing song",
+                contentDescription = stringResource(R.string.mini_song_cover),
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .weight(0.21f)
@@ -290,7 +293,7 @@ class MainActivity : ComponentActivity() {
                 Icon(
                     painter = if (isPlaying == true) painterResource(R.drawable.ic_pause)
                         else painterResource(R.drawable.ic_play_outline),
-                    contentDescription = "play_button"
+                    contentDescription = stringResource(R.string.play_button)
                 )
             }
             Spacer(modifier = Modifier.size(16.dp))
@@ -342,8 +345,8 @@ class MainActivity : ComponentActivity() {
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("需要权限") },
-                text = { Text("此应用需要该权限才能继续运行") },
+                title = { Text(stringResource(R.string.need_permission)) },
+                text = { Text(stringResource(R.string.no_permission)) },
                 confirmButton = {
                     TextButton(onClick = {
                         showDialog = false
@@ -361,12 +364,12 @@ class MainActivity : ComponentActivity() {
                             context.startActivity(intent)
                         }
                     }) {
-                        Text("确认")
+                        Text(stringResource(R.string.confirm))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDialog = false }) {
-                        Text("取消")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )

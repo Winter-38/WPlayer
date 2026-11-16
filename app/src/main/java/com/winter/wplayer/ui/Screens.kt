@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -84,13 +85,13 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_arrow_left),
-                    contentDescription = "Back to home screen"
+                    contentDescription = stringResource(R.string.back_button)
                 )
             }
             //封面--------------------------------
             AsyncImage(
                 model = coverUri,
-                contentDescription = "Big song cover",
+                contentDescription = stringResource(R.string.song_cover),
                 modifier = Modifier
                     .size(300.dp)
                     .clip(RoundedCornerShape(12.dp))
@@ -120,7 +121,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                     .weight(0.9f),
                 fontSize = 25.sp,
                 textAlign = TextAlign.Center,
-                text = songs.getOrNull(songIndex)?.title ?: "Unknown title"
+                text = songs.getOrNull(songIndex)?.title ?: stringResource(R.string.unknown_title)
             )
 
             Text(
@@ -136,7 +137,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                 ),
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,
-                text = (songs.getOrNull(songIndex)?.artist ?: "Unknown artist")
+                text = (songs.getOrNull(songIndex)?.artist ?: stringResource(R.string.unknown_artist))
             )
 
             //按钮组-------------------------------------------------------------------------------------按钮组
@@ -160,7 +161,6 @@ fun ButtonBar() {
     Row (
         modifier = Modifier
             .fillMaxWidth(),
-        //.border(width = 2.dp, color = Color.Blue),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.Top
     ) {
@@ -181,9 +181,9 @@ fun ButtonBar() {
                     else -> painterResource(R.drawable.ic_repeat_one) //Player.REPEAT_MODE_ONE
                 },
                 contentDescription = when (repeatMode) {
-                    Player.REPEAT_MODE_OFF -> "Repeat mode off"
-                    Player.REPEAT_MODE_ALL -> "Repeat mode all"
-                    else -> "Repeat mode one"
+                    Player.REPEAT_MODE_OFF -> stringResource(R.string.repeat_off)
+                    Player.REPEAT_MODE_ALL -> stringResource(R.string.repeat_all)
+                    else -> stringResource(R.string.repeat_one)
                 }
             )
         }
@@ -201,7 +201,7 @@ fun ButtonBar() {
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_skipprevious_outline),
-                contentDescription = "Skip to previous song"
+                contentDescription = stringResource(R.string.previous_button)
             )
         }
         //暂停或开始----------------------
@@ -218,7 +218,7 @@ fun ButtonBar() {
             Icon(
                 painter = if (isPlaying == true) painterResource(R.drawable.ic_pause)
                 else painterResource(R.drawable.ic_play_outline),
-                contentDescription = if (controller?.isPlaying == true) "Pause Button" else "Play Button"
+                contentDescription = if (controller?.isPlaying == true) stringResource(R.string.pause_button) else stringResource(R.string.play_button)
             )
         }
 
@@ -235,7 +235,7 @@ fun ButtonBar() {
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_skipnext_outline),
-                contentDescription = "Skip to next song"
+                contentDescription = stringResource(R.string.next_button)
             )
         }
 
@@ -252,7 +252,8 @@ fun ButtonBar() {
             Icon(
                 painter = if (isShuffleEnabled == true) painterResource(R.drawable.ic_shuffle)
                     else painterResource(R.drawable.ic_shuffle_disabled),
-                contentDescription = "Shuffled"
+                contentDescription = if (isShuffleEnabled == true) stringResource(R.string.shuffle_enabled_button)
+                    else stringResource(R.string.shuffle_disabled_button)
             )
         }
         Spacer(Modifier.fillMaxWidth().height(180.dp))
@@ -270,12 +271,12 @@ fun CreatePlayList(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create new playlist") },
+        title = { Text(stringResource(R.string.create_playlist)) },
         text = {
             TextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text("Playlist Name") },
+                label = { Text(stringResource(R.string.playlist_name)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -284,10 +285,10 @@ fun CreatePlayList(
             TextButton(
                 onClick = { onConfirm(text.trim()) },
                 enabled = text.isNotBlank()
-            ) { Text("Create") }
+            ) { Text(stringResource(R.string.confirm)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }
