@@ -37,7 +37,7 @@ class MusicListViewModel(
         )
 
     val playlists = repo
-        .getAllSongs()
+        .getAllPlaylists()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
