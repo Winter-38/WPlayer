@@ -301,8 +301,9 @@ fun CreatePlayList(
 }
 
 @Composable
-fun PlaylistManageScreen(playlistViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
-    val playlists by playlistViewModel.playlists.collectAsStateWithLifecycle()
+fun PlaylistManageScreen(musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
+    val playlists by musicListViewModel.playlists.collectAsStateWithLifecycle()
+
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.size(35.dp))
         Button(
@@ -321,7 +322,7 @@ fun PlaylistManageScreen(playlistViewModel: MusicListViewModel, onNavToDetail: (
                     Spacer(modifier = Modifier.size(10.dp))
                     Text(
                         text = "${index + 1}",
-
+                        fontSize = 20.sp,
                         modifier = Modifier
                     )
                     Spacer(modifier = Modifier.size(10.dp))
@@ -332,7 +333,21 @@ fun PlaylistManageScreen(playlistViewModel: MusicListViewModel, onNavToDetail: (
                         fallback = painterResource(R.drawable.ic_play_outline)
                     )
                     Spacer(modifier = Modifier.size(70.dp))
-                    Text(playlist.name)
+                    Text(
+                        text = playlist.name,
+                        fontSize = 20.sp
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(
+                        onClick = {
+                            musicListViewModel.removePlaylist(playlist.playlistId)
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_delete_outline),
+                            contentDescription = stringResource(R.string.delete)
+                        )
+                    }
                 }
             }
         }

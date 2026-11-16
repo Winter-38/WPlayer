@@ -23,6 +23,7 @@
     <string name="playlist_name">列表名称</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
+    <string name="delete">删除</string>
     <string name="others">其他</string>
     <string name="settings">设置</string>
 </resources>

@@ -34,4 +34,7 @@ class PlaylistRepository(
 
     suspend fun removeSongFromPlaylist(playlistId: Long, songId: Long) =
         playlistSongDao.removeFromPlaylist(playlistId, songId)
+
+    suspend fun removePlaylist(playlistId: Long) =
+        playlistDao.deleteById(playlistId)
 }

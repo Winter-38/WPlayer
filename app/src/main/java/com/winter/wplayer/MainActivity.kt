@@ -131,7 +131,10 @@ class MainActivity : ComponentActivity() {
                         PlayScreen{ navController.popBackStack() }
                     }
                     composable("playlist_manage_screen") {
-                        PlaylistManageScreen(musicListViewModel) { navController.popBackStack() }
+                        PlaylistManageScreen(
+                            musicListViewModel = musicListViewModel,
+                            onNavToDetail = { navController.popBackStack() }
+                        )
                     }
                 }
             }
@@ -382,7 +385,9 @@ class MainActivity : ComponentActivity() {
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDialog = false }) {
+                    TextButton(
+                        onClick = { showDialog = false }
+                    ) {
                         Text(stringResource(R.string.cancel))
                     }
                 }
