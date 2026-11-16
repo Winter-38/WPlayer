@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -33,6 +34,10 @@ interface PlaylistDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(playlist: Playlist): Long
 
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertSongs(songs: List<Song>)
+
     @Delete
     suspend fun delete(playlist: Playlist)
 }
@@ -54,6 +59,9 @@ interface PlaylistSongDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCrossRef(ref: PlaylistSongCrossRef)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertCrossRefs(refs: List<PlaylistSongCrossRef>)
+
     @Query("DELETE FROM playlist_song_cross_ref WHERE playlistId = :playlistId AND songId = :songId")
-    suspend fun delete(playlistId: Long, songId: Long)
+    suspend fun removeFromPlaylist(playlistId: Long, songId: Long)
 }

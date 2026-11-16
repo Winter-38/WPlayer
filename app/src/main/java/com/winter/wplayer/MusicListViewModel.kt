@@ -1,6 +1,7 @@
 package com.winter.wplayer
 
 import android.app.Application
+import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.compose.runtime.mutableStateOf
@@ -14,65 +15,65 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.collections.emptyList
 @OptIn(UnstableApi::class)
 
-class MusicListViewModel
-    (app: Application): AndroidViewModel(app) {
-    companion object {
-        private const val TAG = "MainActivity"
-    }
-    private val database = AppDataBase.get(application)
-    private val songDao = database.songDao()
-    private val playlistDao = database.playlistDao()
-    private val playlistSongDao = database.playlistSongDao()
-    private val _loaded = MutableStateFlow(false)
-    val loaded = _loaded.asStateFlow()
+class MusicListViewModel(
+    app: Application,
+    private val repo: PlaylistRepository
+): AndroidViewModel(app) {
+    private var _loaded = false
 
-    val songLists: StateFlow<List<Song>> = songDao.getAll()
+
+    val songLists: StateFlow<List<Song>> = repo
+        .getAllSongs()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
-    val playlists = playlistDao.getAll()
+    val playlists = repo
+        .getAllSongs()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
     fun search() {
-        if (!_loaded.value) {
+        if (!_loaded) {
             viewModelScope.launch {
                 val searcher = Searcher(application)
-                val list = searcher.queryAudioList(application, "ARTIST", "DESC")
-                songDao.insertAll(list)
-                _loaded.value = true
+                val songs = searcher.queryAudioList(application, "TITLE", "ASC")
+                repo.insertSongs(songs)
+                _loaded = true
             }
         }
     }
 
-    fun importSongs(list: List<Song>) = viewModelScope.launch {
-        songDao.insertAll(list)
-    }
-
-    fun createPlaylist(name: String, onCreated: (Long) -> Unit = {} ) =
+    fun createPlaylist(name: String, coverUri: Uri?, onCreated: (Long) -> Unit = {} ) {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return
         viewModelScope.launch {
-            val playlistId = playlistDao.insert(Playlist(0, name, null))
+            val playlistId = repo.createPlaylist(name = trimmed, coverUri = coverUri)
             onCreated(playlistId)
         }
-
-    fun addToPlaylist(playlistId: Long, songId: Long) = viewModelScope.launch {
-        val pos = playlistSongDao.nextPos(playlistId)
-        playlistSongDao.insertCrossRef(PlaylistSongCrossRef(playlistId, songId, pos))
     }
 
-    fun removeFromPlaylist(playlistId: Long, songId: Long) = viewModelScope.launch {
-        playlistSongDao.delete(playlistId, songId)
+    fun addSongsToPlaylist(playlistId: Long, songs: List<Song>) {
+        viewModelScope.launch {
+            repo.addSongsToPlaylist(playlistId, songs)
+        }
     }
 
-    fun playlistSongs(playlistId: Long) = playlistSongDao.getSongsInPlaylist(playlistId)
+    fun removeFromPlaylist(playlistId: Long, songId: Long) {
+        viewModelScope.launch {
+            repo.removeSongFromPlaylist(playlistId, songId)
+        }
+    }
+
+    fun getPlaylistSongs(playlistId: Long) = repo.getSongsInPlaylist(playlistId)
 }
