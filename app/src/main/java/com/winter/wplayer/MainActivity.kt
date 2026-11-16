@@ -61,7 +61,10 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.room.Room
 import coil3.compose.AsyncImage
+import com.winter.wplayer.room.AppDataBase
+import com.winter.wplayer.room.PlaylistRepository
 import com.winter.wplayer.ui.CreatePlayList
 import com.winter.wplayer.ui.PlayScreen
 import com.winter.wplayer.ui.theme.ListBackgroundColor
@@ -74,7 +77,19 @@ class MainActivity : ComponentActivity() {
         private const val TAG = "MainActivityAction"
     }
 
-    val musicListViewModel: MusicListViewModel by viewModels()
+    private val db by lazy {
+        Room.databaseBuilder(applicationContext, AppDataBase::class.java, "music.db").build()
+    }
+    private val songDao by lazy { db.songDao() }
+    private val playlistDao by lazy { db.playlistDao() }
+    private val playlistSongDao by lazy { db.playlistSongDao() }
+
+    private val repo by lazy {
+        PlaylistRepository(db, songDao, playlistDao, playlistSongDao)
+    }
+    val musicListViewModel: MusicListViewModel by viewModels {
+        MusicListViewModelFactory(application, repo)
+    }
     val musicPlayerViewModel: MusicPlayerViewModel by viewModels()
 
     @OptIn(UnstableApi::class)
@@ -89,7 +104,7 @@ class MainActivity : ComponentActivity() {
 
                 }
                 val navController = rememberNavController()
-                RequestPermission{ musicListViewModel.search("TITLE", "ASC") }
+                RequestPermission { musicListViewModel.search("TITLE", "ASC") }
                 NavHost(navController, "home") {
                     composable("home") {
                         Column(modifier = Modifier.fillMaxSize()) {

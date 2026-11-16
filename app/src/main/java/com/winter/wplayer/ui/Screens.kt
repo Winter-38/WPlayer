@@ -74,7 +74,6 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                //.border(2.dp, Color.Blue)
         ) {
             //返回键-------------------------------
             Button(
@@ -106,7 +105,6 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
         Column(modifier = Modifier
             .fillMaxWidth()
             .weight(0.8f)
-            //.border(2.dp, Color.Blue)
         ) {
             //标题---------------------------------------------------------------------------------------标题
             Text(
@@ -120,7 +118,6 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                         velocity = 30.dp
                     )
                     .weight(0.9f),
-                    //.border(2.dp, Color.Blue),
                 fontSize = 25.sp,
                 textAlign = TextAlign.Center,
                 text = songs.getOrNull(songIndex)?.title ?: "Unknown title"

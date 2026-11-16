@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.application
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.viewModelScope
@@ -76,4 +78,17 @@ class MusicListViewModel(
     }
 
     fun getPlaylistSongs(playlistId: Long) = repo.getSongsInPlaylist(playlistId)
+}
+
+class MusicListViewModelFactory(
+    private val app: Application,
+    private val repo: PlaylistRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MusicListViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MusicListViewModel(app, repo) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+    }
 }
