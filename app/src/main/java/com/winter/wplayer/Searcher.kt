@@ -2,12 +2,11 @@ package com.winter.wplayer
 
 import android.content.ContentUris
 import android.content.Context
-import android.net.Uri
 import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
-import javax.annotation.meta.When
+import com.winter.wplayer.room.Song
 
 class Searcher(context: Context) {
     val audioList = mutableListOf<Song>()

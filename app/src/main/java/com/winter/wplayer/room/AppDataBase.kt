@@ -1,4 +1,4 @@
-package com.winter.wplayer
+package com.winter.wplayer.room
 
 import android.content.Context
 import android.net.Uri

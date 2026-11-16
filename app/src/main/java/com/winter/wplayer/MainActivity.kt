@@ -173,7 +173,7 @@ class MainActivity : ComponentActivity() {
                     CreatePlayList(
                         show = showCreate,
                         onDismiss = { showCreate = false },
-                        onConfirm = { name -> musicListViewModel.createPlaylist(name = name) }
+                        onConfirm = { name -> musicListViewModel.createPlaylist(name = name, coverUri = null) }
                     )
                 }
             }
