@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.nio.channels.Selector
 import kotlin.collections.emptyList
 
 class MusicListViewModel(
@@ -86,6 +87,17 @@ class MusicListViewModel(
         }
     }
 
+    fun rescan() {
+        viewModelScope.launch {
+            val config = dataStore.data.first()
+            val order = config[ConfigHolder.SONG_ORDER] ?: "TITLE"
+            val sort = config[ConfigHolder.SONG_SORT] ?: "ASC"
+            val songs = Searcher(application).queryAudioList(application, order, sort)
+            repo.insertSongs(songs)
+            dataStore.edit { it[ConfigHolder.MEDIA_LOADED] = true }
+        }
+    }
+
     fun createPlaylist(name: String, coverUri: Uri?, onCreated: (Long) -> Unit = {} ) {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) return
@@ -115,35 +127,54 @@ class MusicListViewModel(
     fun getPlaylistSongs(playlistId: Long) = repo.getSongsInPlaylist(playlistId)
 
     private fun comparatorFor(order: String, sort: String): Comparator<Song>{
-        fun key(song: Song): String? = when (order) {
-            "ARTIST" -> song.artist
-            //"SIZE" -> song.size
-            //"DATE_ADDED" -> song.dateAdded
-            //"DATE_MODIFIED" -> song.dateModified
-            else -> song.title
+        val field: Comparator<Song> = when (order) {
+            "ARTIST" -> textKey { it.artist }
+            "SIZE" -> valueKey { it.size }
+            "DATE_ADDED" -> valueKey { it.dateAdded }
+            "DATE_MODIFIED" -> valueKey { it.dateModified }
+            else -> textKey { it.title }
         }
-        val byField = Comparator<Song> { a, b ->
-            compareNullable(key(a), key(b))
+        val missing: (Song) -> Boolean = when (order) {
+            "ARTIST" -> { s -> s.artist == null }
+            "SIZE" -> { s -> s.size == null }
+            "DATE_ADDED" -> { s -> s.dateAdded == null }
+            "DATE_MODIFIED" -> { s -> s.dateModified == null }
+            else -> { s -> s.title == null}
         }
-        val byDirection = if (sort == "DESC") byField.reversed() else byField
+        val directed = if (sort == "DESC") field.reversed() else field
         val nullsLast = Comparator<Song> { a, b ->
-            val an = key(a) == null
-            val bn = key(b) == null
             when {
-                an == bn -> 0
-                an -> 1
+                missing(a) == missing(b) -> 0
+                missing(a) -> 1
                 else -> -1
             }
         }
-        return nullsLast.then(byDirection).thenBy { it.songId }
+        return nullsLast.then(directed).thenBy { it.songId }
     }
 
-    private fun compareNullable(a: String?, b: String?): Int = when {
-        a == null && b == null -> 0
-        a == null -> 1
-        b == null -> -1
-        else -> a.compareTo(b, ignoreCase = true)
-    }
+    private fun textKey(selector: (Song) -> String?): Comparator<Song> =
+        Comparator { a, b->
+            val ka = selector(a)
+            val kb = selector(b)
+            when {
+                ka == null && kb == null -> 0
+                ka == null -> 1
+                kb == null -> -1
+                else -> ka.compareTo(kb, ignoreCase = true)
+            }
+        }
+
+    private fun <K: Comparable<K>> valueKey(selector: (Song) -> K?): Comparator<Song> =
+        Comparator { a, b ->
+            val ka = selector(a)
+            val kb = selector(b)
+            when {
+                ka == null && kb == null -> 0
+                ka == null -> 1
+                kb == null -> -1
+                else -> ka.compareTo(kb)
+            }
+        }
 }
 
 
