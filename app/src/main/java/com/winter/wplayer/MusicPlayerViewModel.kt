@@ -15,6 +15,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
+import com.winter.wplayer.room.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
@@ -154,7 +155,7 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         controller.prepare()
         if (wasPlaying) controller.play()
 
-        IndexHolder.update(newIndex)
+        IndexHolder.update(controller.currentMediaItem?.mediaId)
 
         if (!restored) {
             restored = true
@@ -166,6 +167,23 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
                 isRestoring = false
             }
         }
+    }
+
+    fun playSong(song: Song) {
+        val controller = _controller.value ?: return
+        val mediaId = song.uri.toString()
+
+        val index = (0 until controller.mediaItemCount).firstOrNull {
+            controller.getMediaItemAt(it).mediaId == mediaId
+        }
+        if (index != null) {
+            controller.seekTo(index, 0L)
+        } else {
+            controller.addMediaItem(MediaItem.Builder().setMediaId(mediaId).setUri(song.uri).build())
+            controller.prepare()
+            controller.seekTo(controller.mediaItemCount - 1, 0L)
+        }
+        controller.play()
     }
 
     override fun onCleared() {

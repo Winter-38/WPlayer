@@ -18,6 +18,7 @@ class PlaybackService: MediaSessionService() {
     private val listener = object: Player.Listener {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             IndexHolder.update(mediaItem?.mediaId)
+            Log.d("TAG", "${mediaItem?.mediaId}")
         }
     }
     override fun onCreate() {

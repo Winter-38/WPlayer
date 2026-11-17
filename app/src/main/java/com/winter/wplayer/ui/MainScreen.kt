@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
@@ -177,7 +178,7 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
     }
 
     LazyColumn(modifier) {
-        itemsIndexed(songs, key = { _,song -> song.songId }) { index, song ->
+        itemsIndexed(songs, key = { _, song -> song.songId }) { _, song ->
             Row(
                 modifier = Modifier
                     .height(60.dp)
@@ -187,7 +188,7 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
                         shape = RoundedCornerShape(8.dp)
                     )
                     .clickable {
-                        musicPlayerViewModel.seekTo(index, 0L)
+                        musicPlayerViewModel.playSong(song)
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -218,16 +219,21 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
 fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
     val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
-    val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
-    val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
-    val title = (songs.getOrNull(songIndex)?.title ?: stringResource(R.string.unknown_title)) +
-            " - " + (songs.getOrNull(songIndex)?.artist ?: stringResource(R.string.unknown_artist))
+    val currentMediaId by IndexHolder.currentMediaId.collectAsStateWithLifecycle()
+    val currentSong = remember(songs, currentMediaId) {
+        songs.firstOrNull{ it.uri.toString() == currentMediaId }
+    }
+    val coverUri = currentSong?.coverUri ?: R.drawable.ic_play_outline
+    val title = (currentSong?.title ?: stringResource(R.string.unknown_title)) +
+            " - " + (currentSong?.artist ?: stringResource(R.string.unknown_artist))
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onNavToDetail() }
+            .clickable {
+                onNavToDetail()
+            }
     ) {
         Spacer(modifier = Modifier.size(16.dp))
         AsyncImage(

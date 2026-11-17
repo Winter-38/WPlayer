@@ -22,6 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,9 +49,12 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
     val musicListViewModel: MusicListViewModel = viewModel(viewModelStoreOwner = activity)
     //播放列表&歌曲索引
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
-    val songIndex by IndexHolder.songIndex.collectAsStateWithLifecycle()
+    val currentMediaId by IndexHolder.currentMediaId.collectAsStateWithLifecycle()
+    val currentSong = remember(songs, currentMediaId) {
+        songs.firstOrNull{ it.uri.toString() == currentMediaId }
+    }
     //歌曲封面&标题
-    val coverUri = songs.getOrNull(songIndex)?.coverUri ?: R.drawable.ic_play_outline
+    val coverUri = currentSong?.coverUri ?: R.drawable.ic_play_outline
     Column(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -104,7 +108,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                     .weight(0.9f),
                 fontSize = 25.sp,
                 textAlign = TextAlign.Center,
-                text = songs.getOrNull(songIndex)?.title ?: stringResource(R.string.unknown_title)
+                text = currentSong?.title ?: stringResource(R.string.unknown_title)
             )
 
             Text(
@@ -120,7 +124,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
                     ),
                 fontSize = 15.sp,
                 textAlign = TextAlign.Center,
-                text = (songs.getOrNull(songIndex)?.artist ?: stringResource(R.string.unknown_artist))
+                text = currentSong?.artist ?: stringResource(R.string.unknown_artist)
             )
 
             //按钮组-------------------------------------------------------------------------------------按钮组

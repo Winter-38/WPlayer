@@ -44,7 +44,14 @@ class MusicListViewModel(
 
     val mediaItemLists: StateFlow<List<MediaItem>> =
         songLists
-            .map { songs -> songs.map { MediaItem.fromUri(it.uri) } }
+            .map { songs ->
+                songs.map { song ->
+                    MediaItem.Builder()
+                        .setMediaId(song.uri.toString())
+                        .setUri(song.uri)
+                        .build()
+                }
+            }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
