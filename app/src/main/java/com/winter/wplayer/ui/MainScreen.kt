@@ -57,9 +57,11 @@ import com.winter.wplayer.R
 import com.winter.wplayer.ui.theme.ListBackgroundColor
 
 @Composable
-fun TopBar(musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
-    var expended by remember { mutableStateOf(false) }
+fun TopBar(musicListViewModel: MusicListViewModel, onNavToSetting: () -> Unit){
+    var mainExpended by remember { mutableStateOf(false) }
+    var sortExpended by remember { mutableStateOf(false) }
     var showCreate by remember { mutableStateOf(false) }
+
     Column {
         Spacer(Modifier.size(20.dp))
         Row(Modifier.height(65.dp)){
@@ -75,7 +77,7 @@ fun TopBar(musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
             ){
                 IconButton(
                     onClick = {
-                        expended = true
+                        mainExpended = true
                     },
                     modifier = Modifier
                         .size(50.dp)
@@ -87,28 +89,68 @@ fun TopBar(musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
                 }
 
                 DropdownMenu(
-                    expanded = expended,
-                    onDismissRequest = { expended = false }
+                    expanded = mainExpended,
+                    onDismissRequest = { mainExpended = false }
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.sort)) },
                         onClick = {
-                            expended = false
-                            //sort by ...
+                            mainExpended = false
+                            sortExpended = true
                         }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.create_playlist)) },
                         onClick = {
-                            expended = false
+                            mainExpended = false
                             showCreate = true
                         }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.settings)) },
                         onClick = {
-                            expended = false
-                            onNavToDetail()
+                            mainExpended = false
+                            onNavToSetting()
+                        }
+                    )
+                }
+                DropdownMenu(
+                    expanded = sortExpended,
+                    onDismissRequest = { sortExpended = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.title)) },
+                        onClick = {
+                            sortExpended = false
+                            musicListViewModel.setSongOrder("TITLE")
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.artist)) },
+                        onClick = {
+                            sortExpended = false
+                            musicListViewModel.setSongOrder("ARTIST")
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.size)) },
+                        onClick = {
+                            sortExpended = false
+                            musicListViewModel.setSongOrder("SIZE")
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.date_added)) },
+                        onClick = {
+                            sortExpended = false
+                            musicListViewModel.setSongOrder("DATE_ADDED")
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.date_modified)) },
+                        onClick = {
+                            sortExpended = false
+                            musicListViewModel.setSongOrder("DATE_MODIFIED")
                         }
                     )
                 }
@@ -128,15 +170,15 @@ fun TopBar(musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
 @Composable
 fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: MusicListViewModel, modifier: Modifier){
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
-    val items = musicListViewModel.songLists.collectAsStateWithLifecycle().value.map { MediaItem.fromUri(it.uri) }
-
+    val items by musicListViewModel.mediaItemLists.collectAsStateWithLifecycle()
+    val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
     //检测items和controller值变化，防止异步错误
-    LaunchedEffect( items) {
-        musicPlayerViewModel.initMedia(items)
+    LaunchedEffect( items, controller) {
+        musicPlayerViewModel.syncQueue(items)
     }
 
     LazyColumn(modifier) {
-        itemsIndexed(songs) { index, song ->
+        itemsIndexed(songs, key = { _,song -> song.songId }) { index, song ->
             Row(
                 modifier = Modifier
                     .height(60.dp)
@@ -152,7 +194,7 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
             ) {
                 Spacer(modifier = Modifier.weight(1f))
                 AsyncImage(
-                    model = songs.get(index).coverUri,
+                    model = song.coverUri,
                     contentDescription = stringResource(R.string.mini_song_cover),
                     error = painterResource(R.drawable.ic_play_outline),
                     fallback = painterResource(R.drawable.ic_play_outline),

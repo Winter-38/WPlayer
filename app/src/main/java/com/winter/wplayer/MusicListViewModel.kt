@@ -2,7 +2,6 @@ package com.winter.wplayer
 
 import android.app.Application
 import android.net.Uri
-import androidx.annotation.OptIn
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
@@ -10,15 +9,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.application
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.MediaItem
 import com.winter.wplayer.room.PlaylistRepository
 import com.winter.wplayer.room.Song
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlin.collections.emptyList
-@OptIn(UnstableApi::class)
 
 class MusicListViewModel(
     app: Application,
@@ -26,15 +27,28 @@ class MusicListViewModel(
 ): AndroidViewModel(app) {
     private var _loaded = false
     private val dataStore = app.dataStore
+    private val sortPrefs = dataStore.data.map {
+        (it[ConfigHolder.SONG_ORDER] ?: "TITLE") to (it[ConfigHolder.SONG_SORT] ?: "ASC")
+    }
 
 
-    val songLists: StateFlow<List<Song>> = repo
-        .getAllSongs()
-        .stateIn(
+    val songLists: StateFlow<List<Song>> =
+        combine(repo.getAllSongs(), sortPrefs) { songs, (order, sort) ->
+            songs.sortedWith(comparatorFor(order, sort))
+        }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    val mediaItemLists: StateFlow<List<MediaItem>> =
+        songLists
+            .map { songs -> songs.map { MediaItem.fromUri(it.uri) } }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
 
     val playlists = repo
         .getAllPlaylists()
@@ -43,16 +57,32 @@ class MusicListViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-    fun search(order: String, sort: String) {
+    fun search() { //init function
         viewModelScope.launch {
-            val loaded = dataStore.data.first()
-            _loaded = loaded[ConfigHolder.MEDIA_LOADED] ?: false
+            val config = dataStore.data.first()
+            _loaded = config[ConfigHolder.MEDIA_LOADED] ?: false
+
             if (!_loaded) {
+                val order = config[ConfigHolder.SONG_ORDER] ?: "TITLE"
+                val sort = config[ConfigHolder.SONG_SORT] ?: "ASC"
+
                 val searcher = Searcher(application)
                 val songs = searcher.queryAudioList(application, order, sort)
                 repo.insertSongs(songs)
                 dataStore.edit { it[ConfigHolder.MEDIA_LOADED] = true }
             }
+        }
+    }
+
+    fun setSongOrder(order: String) {
+        viewModelScope.launch {
+            dataStore.edit { it[ConfigHolder.SONG_ORDER] = order }
+        }
+    }
+
+    fun setSongSort(sort: String) {
+        viewModelScope.launch {
+            dataStore.edit { it[ConfigHolder.SONG_SORT] = sort }
         }
     }
 
@@ -83,7 +113,36 @@ class MusicListViewModel(
     }
 
     fun getPlaylistSongs(playlistId: Long) = repo.getSongsInPlaylist(playlistId)
+
+    private fun comparatorFor(order: String, sort: String): Comparator<Song>{
+        fun key(song: Song): String? = when (order) {
+            "ARTIST" -> song.artist
+            else -> song.title
+        }
+        val byField = Comparator<Song> { a, b ->
+            compareNullable(key(a), key(b))
+        }
+        val byDirection = if (sort == "DESC") byField.reversed() else byField
+        val nullsLast = Comparator<Song> { a, b ->
+            val an = key(a) == null
+            val bn = key(b) == null
+            when {
+                an == bn -> 0
+                an -> 1
+                else -> -1
+            }
+        }
+        return nullsLast.then(byDirection).thenBy { it.songId }
+    }
+
+    private fun compareNullable(a: String?, b: String?): Int = when {
+        a == null && b == null -> 0
+        a == null -> 1
+        b == null -> -1
+        else -> a.compareTo(b, ignoreCase = true)
+    }
 }
+
 
 class MusicListViewModelFactory(
     private val app: Application,

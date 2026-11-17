@@ -65,7 +65,9 @@ class MainActivity : ComponentActivity() {
 
                 }
                 val navController = rememberNavController()
-                RequestPermission { musicListViewModel.search("TITLE", "ASC") }
+                RequestPermission {
+                    musicListViewModel.search()
+                }
                 NavHost(navController, "home") {
                     composable("home") {
                         Column(modifier = Modifier.fillMaxSize()) {

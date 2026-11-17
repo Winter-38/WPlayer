@@ -11,10 +11,13 @@ data class Song (
     @PrimaryKey val songId: Long,
     val uri: Uri,
     val coverUri: Uri?,
-    val title: String,
-    val album: String,
-    val artist: String,
-    val duration: Long
+    val title: String?,
+    val album: String?,
+    val artist: String?,
+    val size: Long?,
+    val dateAdded: Long?,
+    val dateModified: Long?,
+    val duration: Long?
 )
 
 @Entity(tableName = "playlists")

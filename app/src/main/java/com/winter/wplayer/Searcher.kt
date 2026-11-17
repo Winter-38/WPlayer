@@ -19,6 +19,9 @@ class Searcher(context: Context) {
         MediaStore.Audio.Media.ALBUM,
         MediaStore.Audio.Media.ALBUM_ID,
         MediaStore.Audio.Media.ARTIST,
+        MediaStore.Audio.Media.SIZE,
+        MediaStore.Audio.Media.DATE_ADDED,
+        MediaStore.Audio.Media.DATE_MODIFIED,
         MediaStore.Audio.Media.DURATION
     )
 
@@ -29,14 +32,12 @@ class Searcher(context: Context) {
             selection,
             null,
             when (order) {
-                "TITLE" -> MediaStore.Audio.Media.TITLE
                 "DATE_ADDED" -> MediaStore.Audio.Media.DATE_ADDED
                 "DATE_MODIFIED" -> MediaStore.Audio.Media.DATE_MODIFIED
                 "SIZE" -> MediaStore.Audio.Media.SIZE
                 "ARTIST" -> MediaStore.Audio.Media.ARTIST
                 else -> MediaStore.Audio.Media.TITLE
             } + when (sort) {
-                "ASC" -> " ASC"
                 "DESC" -> " DESC"
                 else -> " ASC"
             }
@@ -49,6 +50,9 @@ class Searcher(context: Context) {
             val albumCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val coverCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
             val artistCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+            val sizeCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+            val dateAddedCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
+            val dateModifiedCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED)
             val durationCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
 
             while (c.moveToNext()) {
@@ -60,6 +64,9 @@ class Searcher(context: Context) {
                 val coverUri = ContentUris.withAppendedId(
                     "content://media/external/audio/albumart".toUri(),coverId
                 )
+                val size = c.getLong(sizeCol)
+                val dateAdded = c.getLong(dateAddedCol)
+                val dateModified = c.getLong(dateModifiedCol)
                 audioList.add(
                     Song(
                         songId = id,
@@ -68,6 +75,9 @@ class Searcher(context: Context) {
                         title = c.getString(titleCol),
                         album = c.getString(albumCol),
                         artist = c.getString(artistCol),
+                        size = size,
+                        dateAdded = dateAdded,
+                        dateModified = dateModified,
                         duration = c.getLong(durationCol)
                     )
                 )

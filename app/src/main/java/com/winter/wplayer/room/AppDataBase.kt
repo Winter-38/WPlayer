@@ -9,7 +9,7 @@ import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 
 
-@Database(entities = [Song::class, Playlist::class, PlaylistSongCrossRef::class], version = 2, exportSchema = false)
+@Database(entities = [Song::class, Playlist::class, PlaylistSongCrossRef::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDataBase: RoomDatabase() {
     abstract fun songDao(): SongDao
@@ -23,10 +23,10 @@ abstract class AppDataBase: RoomDatabase() {
         fun get(context: Context): AppDataBase {
             return INSTANCE ?: synchronized (this) {
                 INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDataBase::class.java,
-                    "music.db"
-                ).build().also { INSTANCE = it }
+                                context.applicationContext,
+                                AppDataBase::class.java,
+                                "music.db"
+                            ).build().also { INSTANCE = it }
             }
         }
     }

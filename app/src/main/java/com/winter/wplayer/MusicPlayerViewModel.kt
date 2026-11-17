@@ -30,7 +30,8 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
     }
     private val buildMutex = Mutex()
 
-    private var mediaInitialized = false
+    private var queueIds: List<String> = emptyList()
+    private var restored = false
     private var _controller = MutableStateFlow<MediaController?>(null)
     val controller = _controller.asStateFlow()
 
@@ -134,22 +135,37 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         }
     }
 
-    fun initMedia(items: List<MediaItem>){
-        if (mediaInitialized) return
+    fun syncQueue(items: List<MediaItem>) {
         if (items.isEmpty()) return
         val controller = _controller.value ?: return
-        controller.setMediaItems(items, 0, 0L)
+
+        val ids = items.map { it.mediaId }
+        if (ids == queueIds) return
+        queueIds = ids
+
+        val currentId = controller.currentMediaItem?.mediaId
+        val newIndex = if (currentId == null) 0
+            else items.indexOfFirst { it.mediaId == currentId }.takeIf { it >= 0 } ?: 0
+        val keepPos = currentId != null && items[newIndex].mediaId == currentId
+        val pos = if (keepPos) controller.currentPosition else 0L
+        val wasPlaying = controller.isPlaying
+
+        controller.setMediaItems(items, newIndex, pos)
         controller.prepare()
+        if (wasPlaying) controller.play()
 
-        viewModelScope.launch {
-            val config = datastore.data.first()
-            isRestoring = true
-            controller.repeatMode = config[ConfigHolder.REPEAT_MODE] ?: Player.REPEAT_MODE_OFF
-            controller.shuffleModeEnabled = config[ConfigHolder.SHUFFLE] ?: false
-            isRestoring = false
+        IndexHolder.update(newIndex)
+
+        if (!restored) {
+            restored = true
+            viewModelScope.launch {
+                val config = datastore.data.first()
+                isRestoring = true
+                controller.repeatMode = config[ConfigHolder.REPEAT_MODE] ?: Player.REPEAT_MODE_OFF
+                controller.shuffleModeEnabled = config[ConfigHolder.SHUFFLE] ?: false
+                isRestoring = false
+            }
         }
-
-        mediaInitialized = true
     }
 
     override fun onCleared() {

@@ -2,12 +2,16 @@
     <string name="app_name">WPlayer</string>
     <string name="need_permission">Need permission</string>
     <string name="no_permission">This app needs permission to run</string>
+
     <string name="back_button">Back to last screen</string>
+
     <string name="song_cover">Full song cover</string>
     <string name="mini_song_cover">Mini song cover</string>
     <string name="playlist_cover">Playlist Cover</string>
+
     <string name="unknown_title">Unknown title</string>
     <string name="unknown_artist">Unknown artist</string>
+
     <string name="play_button">Play</string>
     <string name="pause_button">Pause</string>
     <string name="previous_button">Skip to previous song</string>
@@ -17,9 +21,17 @@
     <string name="repeat_off">Repeat mode off</string>
     <string name="repeat_all">Repeat mode on</string>
     <string name="repeat_one">Repeat mode one</string>
+
     <string name="sort">Sort order</string>
+    <string name="title">Title</string>
+    <string name="date_added">Date added</string>
+    <string name="date_modified">Date modified</string>
+    <string name="size">Size</string>
+    <string name="artist">Artist</string>
+
     <string name="create_playlist">Create new playlist</string>
     <string name="playlist_name">Playlist name</string>
+
     <string name="confirm">Confirm</string>
     <string name="confirm_danger">Are you sure?</string>
     <string name="cancel">Cancel</string>
