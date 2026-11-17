@@ -117,6 +117,9 @@ class MusicListViewModel(
     private fun comparatorFor(order: String, sort: String): Comparator<Song>{
         fun key(song: Song): String? = when (order) {
             "ARTIST" -> song.artist
+            //"SIZE" -> song.size
+            //"DATE_ADDED" -> song.dateAdded
+            //"DATE_MODIFIED" -> song.dateModified
             else -> song.title
         }
         val byField = Comparator<Song> { a, b ->
