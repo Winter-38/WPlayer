@@ -113,6 +113,13 @@ fun TopBar(musicListViewModel: MusicListViewModel, onNavToSetting: () -> Unit){
                             onNavToSetting()
                         }
                     )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.rescan)) },
+                        onClick = {
+                            mainExpended = false
+                            musicListViewModel.rescan()
+                        }
+                    )
                 }
                 DropdownMenu(
                     expanded = sortExpended,
