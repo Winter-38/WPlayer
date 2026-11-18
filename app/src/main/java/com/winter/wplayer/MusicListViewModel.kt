@@ -71,6 +71,12 @@ class MusicListViewModel(
         }
     }
 
+    fun addSongToPlaylist(playlistId: Long, song: Song) {
+        viewModelScope.launch {
+            repo.addSongToPlaylist(playlistId, song)
+        }
+    }
+
     fun removeFromPlaylist(playlistId: Long, songId: Long) {
         viewModelScope.launch {
             repo.removeSongFromPlaylist(playlistId, songId)

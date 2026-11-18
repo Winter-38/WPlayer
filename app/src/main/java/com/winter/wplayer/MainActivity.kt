@@ -34,10 +34,6 @@ import com.winter.wplayer.ui.theme.WPlayerTheme
 
 class MainActivity : ComponentActivity() {
 
-    companion object {
-        private const val TAG = "MainActivityAction"
-    }
-
     private val db by lazy {
         Room.databaseBuilder(applicationContext, AppDataBase::class.java, "music.db").build()
     }

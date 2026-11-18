@@ -135,41 +135,11 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
         musicPlayerViewModel.initMedia(items)
     }
 
-    LazyColumn(modifier) {
-        itemsIndexed(songs) { index, song ->
-            Row(
-                modifier = Modifier
-                    .height(60.dp)
-                    .fillMaxWidth()
-                    .background(
-                        color = ListBackgroundColor,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .clickable {
-                        musicPlayerViewModel.seekTo(index, 0L)
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(modifier = Modifier.weight(1f))
-                AsyncImage(
-                    model = songs.get(index).coverUri,
-                    contentDescription = stringResource(R.string.mini_song_cover),
-                    error = painterResource(R.drawable.ic_play_outline),
-                    fallback = painterResource(R.drawable.ic_play_outline),
-                    modifier = Modifier.align(Alignment.CenterVertically).weight(3f)
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    modifier = Modifier
-                        .weight(24f),
-                    maxLines = 1,
-                    text = song.title + " - " + song.artist
-                )
-            }
-            Spacer(modifier = Modifier.padding(2.dp))
-        }
-    }
+    SongItems(
+        songs = songs,
+        modifier = modifier,
+        action = { index, _ -> musicPlayerViewModel.seekTo(index, 0L) }
+    )
 }
 
 @OptIn(UnstableApi::class)
