@@ -2,14 +2,10 @@ package com.winter.wplayer
 
 import android.app.Application
 import android.content.ComponentName
-import android.content.Context
 import android.util.Log
 import androidx.core.content.ContextCompat
-import androidx.datastore.dataStore
-import androidx.datastore.dataStoreFile
 import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
@@ -18,7 +14,6 @@ import androidx.media3.session.SessionToken
 import com.winter.wplayer.room.Song
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
@@ -155,7 +150,7 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         controller.prepare()
         if (wasPlaying) controller.play()
 
-        IndexHolder.update(controller.currentMediaItem?.mediaId)
+        IndexHolder.update(currentId)
 
         if (!restored) {
             restored = true
@@ -171,7 +166,7 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
 
     fun playSong(song: Song) {
         val controller = _controller.value ?: return
-        val mediaId = song.uri.toString()
+        val mediaId = song.songId.toString()
 
         val index = (0 until controller.mediaItemCount).firstOrNull {
             controller.getMediaItemAt(it).mediaId == mediaId
@@ -179,11 +174,19 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         if (index != null) {
             controller.seekTo(index, 0L)
         } else {
-            controller.addMediaItem(MediaItem.Builder().setMediaId(mediaId).setUri(song.uri).build())
+            controller.addMediaItem(
+                MediaItem.Builder()
+                    .setMediaId(mediaId)
+                    .setUri(song.uri)
+                    .build()
+            )
             controller.prepare()
             controller.seekTo(controller.mediaItemCount - 1, 0L)
         }
         controller.play()
+        Log.d("Player", mediaId)
+        Log.d("Player", "${song.uri}")
+        Log.d("Player", IndexHolder.currentMediaId.toString())
     }
 
     override fun onCleared() {

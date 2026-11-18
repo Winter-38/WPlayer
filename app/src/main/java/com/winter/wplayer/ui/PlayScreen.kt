@@ -51,7 +51,7 @@ fun PlayScreen(onNavToDetail: () -> Unit) {
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
     val currentMediaId by IndexHolder.currentMediaId.collectAsStateWithLifecycle()
     val currentSong = remember(songs, currentMediaId) {
-        songs.firstOrNull{ it.uri.toString() == currentMediaId }
+        songs.firstOrNull{ it.songId.toString() == currentMediaId }
     }
     //歌曲封面&标题
     val coverUri = currentSong?.coverUri ?: R.drawable.ic_play_outline

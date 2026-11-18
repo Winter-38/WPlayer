@@ -43,11 +43,10 @@ class MusicListViewModel(
         )
 
     val mediaItemLists: StateFlow<List<MediaItem>> =
-        songLists
-            .map { songs ->
+        songLists.map { songs ->
                 songs.map { song ->
                     MediaItem.Builder()
-                        .setMediaId(song.uri.toString())
+                        .setMediaId(song.songId.toString())
                         .setUri(song.uri)
                         .build()
                 }

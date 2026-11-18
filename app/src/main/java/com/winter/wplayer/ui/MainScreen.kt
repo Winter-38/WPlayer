@@ -179,6 +179,7 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
     val items by musicListViewModel.mediaItemLists.collectAsStateWithLifecycle()
     val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+
     //检测items和controller值变化，防止异步错误
     LaunchedEffect( items, controller) {
         musicPlayerViewModel.syncQueue(items)
@@ -228,7 +229,7 @@ fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Musi
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
     val currentMediaId by IndexHolder.currentMediaId.collectAsStateWithLifecycle()
     val currentSong = remember(songs, currentMediaId) {
-        songs.firstOrNull{ it.uri.toString() == currentMediaId }
+        songs.firstOrNull{ it.songId.toString() == currentMediaId }
     }
     val coverUri = currentSong?.coverUri ?: R.drawable.ic_play_outline
     val title = (currentSong?.title ?: stringResource(R.string.unknown_title)) +
@@ -240,6 +241,7 @@ fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Musi
             .fillMaxWidth()
             .clickable {
                 onNavToDetail()
+                Log.d("PlayBar", currentSong.toString())
             }
     ) {
         Spacer(modifier = Modifier.size(16.dp))
