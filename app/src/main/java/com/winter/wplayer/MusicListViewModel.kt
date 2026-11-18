@@ -28,9 +28,18 @@ class MusicListViewModel(
 ): AndroidViewModel(app) {
     private var _loaded = false
     private val dataStore = app.dataStore
+
+
     private val sortPrefs = dataStore.data.map {
         (it[ConfigHolder.SONG_ORDER] ?: "TITLE") to (it[ConfigHolder.SONG_SORT] ?: "ASC")
     }
+
+    val configSort: StateFlow<Pair<String, String>> =
+        sortPrefs.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "TITLE" to "ASC"
+        )
 
 
     val songLists: StateFlow<List<Song>> =

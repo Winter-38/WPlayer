@@ -131,7 +131,7 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
         }
     }
 
-    fun syncQueue(items: List<MediaItem>) {
+    /* fun syncQueue(items: List<MediaItem>) {
         if (items.isEmpty()) return
         val controller = _controller.value ?: return
 
@@ -162,7 +162,7 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
                 isRestoring = false
             }
         }
-    }
+    } */
 
     fun playSong(song: Song) {
         val controller = _controller.value ?: return
@@ -184,9 +184,6 @@ class MusicPlayerViewModel(app: Application): AndroidViewModel(app) {
             controller.seekTo(controller.mediaItemCount - 1, 0L)
         }
         controller.play()
-        Log.d("Player", mediaId)
-        Log.d("Player", "${song.uri}")
-        Log.d("Player", IndexHolder.currentMediaId.toString())
     }
 
     override fun onCleared() {

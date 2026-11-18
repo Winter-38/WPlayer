@@ -25,11 +25,15 @@
 
     <string name="sort">排序</string>
     <string name="rescan">重新扫描</string>
+
     <string name="title">标题</string>
     <string name="date_added">添加时间</string>
     <string name="date_modified">修改时间</string>
     <string name="size">大小</string>
     <string name="artist">艺术家</string>
+
+    <string name="sort_asc">正序</string>
+    <string name="sort_desc">倒序</string>
 
     <string name="create_playlist">创建播放列表</string>
     <string name="playlist_name">列表名称</string>

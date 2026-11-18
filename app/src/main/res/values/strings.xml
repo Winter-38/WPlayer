@@ -24,11 +24,15 @@
 
     <string name="sort">Sort order</string>
     <string name="rescan">Rescan</string>
+
     <string name="title">Title</string>
     <string name="date_added">Date added</string>
     <string name="date_modified">Date modified</string>
     <string name="size">Size</string>
     <string name="artist">Artist</string>
+
+    <string name="sort_asc">Ascending</string>
+    <string name="sort_desc">Descending</string>
 
     <string name="create_playlist">Create new playlist</string>
     <string name="playlist_name">Playlist name</string>

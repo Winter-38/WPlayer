@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -50,17 +51,22 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import coil3.compose.AsyncImage
+import com.winter.wplayer.ConfigHolder
 import com.winter.wplayer.IndexHolder
 import com.winter.wplayer.MusicListViewModel
 import com.winter.wplayer.MusicPlayerViewModel
 import com.winter.wplayer.R
+import com.winter.wplayer.dataStore
 import com.winter.wplayer.ui.theme.ListBackgroundColor
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun TopBar(musicListViewModel: MusicListViewModel, onNavToSetting: () -> Unit){
     var mainExpended by remember { mutableStateOf(false) }
     var sortExpended by remember { mutableStateOf(false) }
     var showCreate by remember { mutableStateOf(false) }
+    val configPrefs by musicListViewModel.configSort.collectAsStateWithLifecycle()
 
     Column {
         Spacer(Modifier.size(20.dp))
@@ -160,6 +166,24 @@ fun TopBar(musicListViewModel: MusicListViewModel, onNavToSetting: () -> Unit){
                             musicListViewModel.setSongOrder("DATE_MODIFIED")
                         }
                     )
+                    DropdownMenuItem(
+                        text = { Text(
+                            if (configPrefs.second == "DESC") stringResource(R.string.sort_asc)
+                                else stringResource(R.string.sort_desc)
+                        ) },
+                        onClick = {
+                            sortExpended = false
+                            musicListViewModel.setSongSort(
+                                if (configPrefs.second == "DESC") "ASC" else "DESC"
+                            )
+                        },
+                        leadingIcon = {
+                            Checkbox(
+                                checked = configPrefs.second == "DESC",
+                                onCheckedChange = null
+                            )
+                        }
+                    )
                 }
                 CreatePlayList(
                     show = showCreate,
@@ -182,7 +206,7 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
 
     //检测items和controller值变化，防止异步错误
     LaunchedEffect( items, controller) {
-        musicPlayerViewModel.syncQueue(items)
+        //musicPlayerViewModel.syncQueue(items)
     }
 
     LazyColumn(modifier) {
@@ -241,7 +265,6 @@ fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Musi
             .fillMaxWidth()
             .clickable {
                 onNavToDetail()
-                Log.d("PlayBar", currentSong.toString())
             }
     ) {
         Spacer(modifier = Modifier.size(16.dp))
@@ -253,7 +276,6 @@ fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Musi
             modifier = Modifier
                 .align(Alignment.CenterVertically)
                 .weight(0.21f)
-                .clip(RoundedCornerShape(16.dp)),
         )
         Spacer(modifier = Modifier.size(8.dp))
         Text(
