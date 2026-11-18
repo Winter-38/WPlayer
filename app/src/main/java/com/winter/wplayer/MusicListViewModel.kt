@@ -71,11 +71,8 @@ class MusicListViewModel(
             _loaded = config[ConfigHolder.MEDIA_LOADED] ?: false
 
             if (!_loaded) {
-                val order = config[ConfigHolder.SONG_ORDER] ?: "TITLE"
-                val sort = config[ConfigHolder.SONG_SORT] ?: "ASC"
-
                 val searcher = Searcher(application)
-                val songs = searcher.queryAudioList(application, order, sort)
+                val songs = searcher.queryAudioList(application)
                 repo.insertSongs(songs)
                 dataStore.edit { it[ConfigHolder.MEDIA_LOADED] = true }
             }
@@ -96,10 +93,7 @@ class MusicListViewModel(
 
     fun rescan() {
         viewModelScope.launch {
-            val config = dataStore.data.first()
-            val order = config[ConfigHolder.SONG_ORDER] ?: "TITLE"
-            val sort = config[ConfigHolder.SONG_SORT] ?: "ASC"
-            val songs = Searcher(application).queryAudioList(application, order, sort)
+            val songs = Searcher(application).queryAudioList(application)
             repo.insertSongs(songs)
             dataStore.edit { it[ConfigHolder.MEDIA_LOADED] = true }
         }
