@@ -21,7 +21,7 @@ class PlaylistRepository(
     fun getSongsInPlaylist(playlistId: Long): Flow<List<Song>> =
         playlistSongDao.getSongsInPlaylist(playlistId)
 
-    suspend fun addSongsToPlaylist(playlistId: Long, songs: List<Song>){
+    suspend fun addSongsToPlaylist(playlistId: Long, songs: List<Song>) {
         database.withTransaction {
             playlistDao.insertSongs(songs)
             val pos = playlistSongDao.nextPos(playlistId)
@@ -29,6 +29,14 @@ class PlaylistRepository(
                 PlaylistSongCrossRef(playlistId, song.songId, pos + index)
             }
             playlistSongDao.insertCrossRefs(refs)
+        }
+    }
+
+    suspend fun addSongToPlaylist(playlistId: Long, song: Song) {
+        database.withTransaction {
+            val pos = playlistSongDao.nextPos(playlistId)
+            val ref = PlaylistSongCrossRef(playlistId, song.songId, pos)
+            playlistSongDao.insertCrossRef(ref)
         }
     }
 
