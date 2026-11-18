@@ -135,22 +135,8 @@ class MusicListViewModel(
             "DATE_MODIFIED" -> valueKey { it.dateModified }
             else -> textKey { it.title }
         }
-        val missing: (Song) -> Boolean = when (order) {
-            "ARTIST" -> { s -> s.artist == null }
-            "SIZE" -> { s -> s.size == null }
-            "DATE_ADDED" -> { s -> s.dateAdded == null }
-            "DATE_MODIFIED" -> { s -> s.dateModified == null }
-            else -> { s -> s.title == null}
-        }
         val directed = if (sort == "DESC") field.reversed() else field
-        val nullsLast = Comparator<Song> { a, b ->
-            when {
-                missing(a) == missing(b) -> 0
-                missing(a) -> 1
-                else -> -1
-            }
-        }
-        return nullsLast.then(directed).thenBy { it.songId }
+        return directed.thenBy { it.songId }
     }
 
     private fun textKey(selector: (Song) -> String?): Comparator<Song> =
