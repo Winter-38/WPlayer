@@ -44,4 +44,10 @@
     <string name="delete">删除</string>
     <string name="others">其他</string>
     <string name="settings">设置</string>
+
+    <string name="playlists">播放列表</string>
+    <string name="add_songs_to">向“%1$s”添加歌曲</string>
+    <string name="now_playing">正在播放</string>
+    <string name="empty_songs">还没有歌曲\n点“重新扫描”找找看</string>
+    <string name="empty_playlists">还没有播放列表</string>
 </resources>

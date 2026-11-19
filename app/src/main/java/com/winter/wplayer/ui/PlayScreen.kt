@@ -2,11 +2,10 @@ package com.winter.wplayer.ui
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,158 +13,234 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.Player
-import coil3.compose.AsyncImage
+import androidx.media3.session.MediaController
 import com.winter.wplayer.IndexHolder
 import com.winter.wplayer.MusicListViewModel
 import com.winter.wplayer.MusicPlayerViewModel
 import com.winter.wplayer.R
+import com.winter.wplayer.ui.theme.Dimens
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayScreen(onNavToDetail: () -> Unit) {
-    //获取activity
-    val activity = LocalActivity.current as? ComponentActivity ?: error("PlayScreen should be hosted in a Component Activity")
-    //引用activity viewmodel
+fun PlayScreen(onBack: () -> Unit) {
+    val activity = LocalActivity.current as? ComponentActivity
+        ?: error("PlayScreen should be hosted in a Component Activity")
     val musicListViewModel: MusicListViewModel = viewModel(viewModelStoreOwner = activity)
-    //播放列表&歌曲索引
+    val musicPlayerViewModel: MusicPlayerViewModel = viewModel(viewModelStoreOwner = activity)
+
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
     val currentMediaId by IndexHolder.currentMediaId.collectAsStateWithLifecycle()
     val currentSong = remember(songs, currentMediaId) {
-        songs.firstOrNull{ it.songId.toString() == currentMediaId }
+        songs.firstOrNull { it.songId.toString() == currentMediaId }
     }
-    //歌曲封面&标题
-    val coverUri = currentSong?.coverUri ?: R.drawable.ic_play_outline
-    Column(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            //返回键-------------------------------
-            Button(
-                onClick = { onNavToDetail() },
-                shape = CircleShape,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 30.dp).size(60.dp),
-                contentPadding = PaddingValues(6.dp)
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_arrow_left),
-                    contentDescription = stringResource(R.string.back_button)
-                )
-            }
-            //封面--------------------------------
-            AsyncImage(
-                model = coverUri,
-                contentDescription = stringResource(R.string.song_cover),
-                error = painterResource(R.drawable.ic_play_outline),
-                fallback = painterResource(R.drawable.ic_play_outline),
-                modifier = Modifier
-                    .size(300.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .align(Alignment.BottomCenter),
-                contentScale = ContentScale.Crop
+
+    val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+    val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
+    val isShuffleEnabled by musicPlayerViewModel.isShuffleEnabled.collectAsStateWithLifecycle()
+    val repeatMode by musicPlayerViewModel.repeatMode.collectAsStateWithLifecycle()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.now_playing)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_left),
+                            contentDescription = stringResource(R.string.back_button)
+                        )
+                    }
+                }
             )
         }
-
-        //无无无无无无-------------------------------
-        Spacer(modifier = Modifier.weight(0.09f))
-
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .weight(0.8f)
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
-            //标题---------------------------------------------------------------------------------------标题
-            Text(
-                maxLines = 1,
+            Box(
                 modifier = Modifier
+                    .weight(1f)
                     .fillMaxWidth()
-                    .basicMarquee(
-                        iterations = Int.MAX_VALUE,
-                        repeatDelayMillis = 500,
-                        initialDelayMillis = 500,
-                        velocity = 30.dp
+                    .padding(horizontal = 32.dp, vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                BoxWithConstraints {
+                    val coverSize = minOf(maxWidth, maxHeight)
+                    SongCover(
+                        coverUri = currentSong?.coverUri,
+                        contentDescription = stringResource(R.string.song_cover),
+                        size = coverSize,
+                        shape = MaterialTheme.shapes.extraLarge
                     )
-                    .weight(0.9f),
-                fontSize = 25.sp,
-                textAlign = TextAlign.Center,
-                text = currentSong?.title ?: stringResource(R.string.unknown_title)
-            )
+                }
+            }
 
-            Text(
-                maxLines = 1,
+            Column(
                 modifier = Modifier
-                    .weight(0.5f)
                     .fillMaxWidth()
-                    .basicMarquee(
-                        iterations = Int.MAX_VALUE,
-                        repeatDelayMillis = 500,
-                        initialDelayMillis = 500,
-                        velocity = 30.dp
-                    ),
-                fontSize = 15.sp,
-                textAlign = TextAlign.Center,
-                text = currentSong?.artist ?: stringResource(R.string.unknown_artist)
-            )
+                    .padding(horizontal = 24.dp)
+            ) {
+                Text(
+                    text = currentSong?.title ?: stringResource(R.string.unknown_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = currentSong?.artist ?: stringResource(R.string.unknown_artist),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(16.dp))
+                PlaybackProgress(controller)
+                Spacer(Modifier.height(8.dp))
+                PlayerControls(
+                    isPlaying = isPlaying == true,
+                    isShuffleEnabled = isShuffleEnabled == true,
+                    repeatMode = repeatMode,
+                    onTogglePlay = {
+                        if (isPlaying == true) musicPlayerViewModel.pause()
+                        else musicPlayerViewModel.play()
+                    },
+                    onPrevious = { musicPlayerViewModel.seekToPrevious() },
+                    onNext = { musicPlayerViewModel.seekToNext() },
+                    onRepeat = { musicPlayerViewModel.switchRepeatMode() },
+                    onShuffle = { musicPlayerViewModel.switchShuffledMode() }
+                )
+                Spacer(Modifier.height(24.dp))
+            }
+        }
+    }
+}
 
-            //按钮组-------------------------------------------------------------------------------------按钮组
-            ButtonBar()
+/**
+ * Polls the controller for position/duration so no data-layer change is needed.
+ * Runs on the main dispatcher, which is what MediaController expects.
+ */
+@Composable
+private fun PlaybackProgress(controller: MediaController?) {
+    var position by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    var dragValue by remember { mutableFloatStateOf(-1f) }
+
+    LaunchedEffect(controller) {
+        if (controller == null) return@LaunchedEffect
+        while (isActive) {
+            position = controller.currentPosition.coerceAtLeast(0L)
+            duration = controller.duration.coerceAtLeast(0L)
+            delay(500)
+        }
+    }
+
+    val progress = if (duration > 0L) {
+        (position.toFloat() / duration).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+    val sliderValue = if (dragValue >= 0f) dragValue else progress
+    val shownPosition = if (dragValue >= 0f) (dragValue * duration).toLong() else position
+
+    Column(Modifier.fillMaxWidth()) {
+        Slider(
+            value = sliderValue,
+            onValueChange = { dragValue = it },
+            onValueChangeFinished = {
+                if (duration > 0L && dragValue >= 0f) {
+                    controller?.seekTo((dragValue * duration).toLong())
+                }
+                dragValue = -1f
+            },
+            enabled = duration > 0L,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = formatDuration(shownPosition),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = formatDuration(duration),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
 
 @Composable
-fun ButtonBar() {
-    val activity = LocalActivity.current as? ComponentActivity ?: error("PlayScreen should be hosted in a Component Activity")
-    //Music Viewmodel
-    val musicPlayerViewModel: MusicPlayerViewModel = viewModel(viewModelStoreOwner = activity)
-
-    //播放器操控
-    val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
-
-    val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
-    val isShuffleEnabled by musicPlayerViewModel.isShuffleEnabled.collectAsStateWithLifecycle()
-    val repeatMode by musicPlayerViewModel.repeatMode.collectAsStateWithLifecycle()
-    Row (
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.Top
+private fun PlayerControls(
+    isPlaying: Boolean,
+    isShuffleEnabled: Boolean,
+    repeatMode: Int,
+    onTogglePlay: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onRepeat: () -> Unit,
+    onShuffle: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        //切换循环模式-------------------
+        // repeat
         IconButton(
-            onClick = {
-                musicPlayerViewModel.switchRepeatMode()
-            },
-            modifier =  Modifier
-                .size(80.dp)
-                .padding(8.dp)
-                .align(Alignment.CenterVertically)
+            onClick = onRepeat,
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = if (repeatMode != Player.REPEAT_MODE_OFF) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
         ) {
-            Icon (
+            Icon(
                 painter = when (repeatMode) {
                     Player.REPEAT_MODE_OFF -> painterResource(R.drawable.ic_repeat_off)
                     Player.REPEAT_MODE_ALL -> painterResource(R.drawable.ic_repeat_all)
-                    else -> painterResource(R.drawable.ic_repeat_one) //Player.REPEAT_MODE_ONE
+                    else -> painterResource(R.drawable.ic_repeat_one)
                 },
                 contentDescription = when (repeatMode) {
                     Player.REPEAT_MODE_OFF -> stringResource(R.string.repeat_off)
@@ -175,50 +250,36 @@ fun ButtonBar() {
             )
         }
 
-        //跳到上一首----------------------
+        // previous
         IconButton(
-            onClick = {
-                musicPlayerViewModel.seekToPrevious()
-            },
-            shape = CircleShape,
-            modifier = Modifier
-                .size(80.dp)
-                .padding(8.dp)
-                .align(Alignment.CenterVertically)
+            onClick = onPrevious,
+            modifier = Modifier.size(Dimens.touchTargetLarge)
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_skipprevious_outline),
                 contentDescription = stringResource(R.string.previous_button)
             )
         }
-        //暂停或开始----------------------
-        IconButton(
-            onClick = {
-                if (isPlaying == true) musicPlayerViewModel.pause() else musicPlayerViewModel.play()
-            },
-            modifier = Modifier
-                .size(90.dp)
-                .padding(8.dp)
-                .align(Alignment.CenterVertically),
-            shape = CircleShape
+
+        // play / pause
+        FilledIconButton(
+            onClick = onTogglePlay,
+            modifier = Modifier.size(Dimens.playButton)
         ) {
             Icon(
-                painter = if (isPlaying == true) painterResource(R.drawable.ic_pause)
+                painter = if (isPlaying) painterResource(R.drawable.ic_pause)
                 else painterResource(R.drawable.ic_play_outline),
-                contentDescription = if (controller?.isPlaying == true) stringResource(R.string.pause_button) else stringResource(R.string.play_button)
+                contentDescription = stringResource(
+                    if (isPlaying) R.string.pause_button else R.string.play_button
+                ),
+                modifier = Modifier.size(32.dp)
             )
         }
 
-        //跳到下一首----------------------
+        // next
         IconButton(
-            onClick = {
-                musicPlayerViewModel.seekToNext()
-            },
-            shape = CircleShape,
-            modifier = Modifier
-                .size(80.dp)
-                .padding(8.dp)
-                .align(Alignment.CenterVertically)
+            onClick = onNext,
+            modifier = Modifier.size(Dimens.touchTargetLarge)
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_skipnext_outline),
@@ -226,23 +287,34 @@ fun ButtonBar() {
             )
         }
 
-        //启用或者禁用随机------------------
+        // shuffle
         IconButton(
-            onClick = {
-                musicPlayerViewModel.switchShuffledMode()
-            },
-            modifier =  Modifier
-                .size(80.dp)
-                .padding(8.dp)
-                .align(Alignment.CenterVertically)
+            onClick = onShuffle,
+            colors = IconButtonDefaults.iconButtonColors(
+                contentColor = if (isShuffleEnabled) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
         ) {
             Icon(
-                painter = if (isShuffleEnabled == true) painterResource(R.drawable.ic_shuffle)
+                painter = if (isShuffleEnabled) painterResource(R.drawable.ic_shuffle)
                 else painterResource(R.drawable.ic_shuffle_disabled),
-                contentDescription = if (isShuffleEnabled == true) stringResource(R.string.shuffle_enabled_button)
-                else stringResource(R.string.shuffle_disabled_button)
+                contentDescription = if (isShuffleEnabled) {
+                    stringResource(R.string.shuffle_enabled_button)
+                } else {
+                    stringResource(R.string.shuffle_disabled_button)
+                }
             )
         }
-        Spacer(Modifier.fillMaxWidth().height(180.dp))
     }
+}
+
+private fun formatDuration(millis: Long): String {
+    if (millis <= 0L) return "--:--"
+    val totalSeconds = millis / 1000
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "%d:%02d".format(minutes, seconds)
 }

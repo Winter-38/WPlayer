@@ -43,4 +43,10 @@
     <string name="delete">Delete</string>
     <string name="others">Others</string>
     <string name="settings">Settings</string>
+
+    <string name="playlists">Playlists</string>
+    <string name="add_songs_to">Add songs to “%1$s”</string>
+    <string name="now_playing">Now playing</string>
+    <string name="empty_songs">No songs yet.\nTap Rescan to look for music.</string>
+    <string name="empty_playlists">No playlists yet.</string>
 </resources>

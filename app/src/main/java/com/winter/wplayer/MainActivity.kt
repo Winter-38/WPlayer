@@ -6,32 +6,29 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
-import com.example.compose.AppTheme
 import com.winter.wplayer.room.AppDataBase
 import com.winter.wplayer.room.PlaylistRepository
+import com.winter.wplayer.ui.HomeScreen
 import com.winter.wplayer.ui.PlayScreen
-import com.winter.wplayer.ui.PlayBar
-import com.winter.wplayer.ui.PlayList
 import com.winter.wplayer.ui.PlaylistManageScreen
 import com.winter.wplayer.ui.RequestPermission
-import com.winter.wplayer.ui.TopBar
+import com.winter.wplayer.ui.theme.AppTheme
 
 
 class MainActivity : ComponentActivity() {
@@ -60,47 +57,87 @@ class MainActivity : ComponentActivity() {
             AppTheme {
                 LaunchedEffect(Unit) {
                     musicPlayerViewModel.buildController()
-
                 }
                 val navController = rememberNavController()
                 RequestPermission {
                     musicListViewModel.search()
                 }
-                NavHost(navController, "home") {
-                    composable("home") {
-                        Column(modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                color = MaterialTheme.colorScheme.surface
-                            )
-                        ) {
-                            TopBar(musicListViewModel) {
+                NavHost(
+                    navController = navController,
+                    startDestination = "home",
+                    enterTransition = {
+                        fadeIn(tween(220, easing = FastOutSlowInEasing)) +
+                            slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { it / 4 }
+                    },
+                    exitTransition = {
+                        fadeOut(tween(160)) +
+                            slideOutHorizontally(tween(320, easing = FastOutSlowInEasing)) { -it / 8 }
+                    },
+                    popEnterTransition = {
+                        fadeIn(tween(220, easing = FastOutSlowInEasing)) +
+                            slideInHorizontally(tween(320, easing = FastOutSlowInEasing)) { -it / 4 }
+                    },
+                    popExitTransition = {
+                        fadeOut(tween(160)) +
+                            slideOutHorizontally(tween(320, easing = FastOutSlowInEasing)) { it / 8 }
+                    }
+                ) {
+                    composable(
+                        route = "home",
+                        exitTransition = {
+                            if (targetState.destination.route == "play_screen") {
+                                ExitTransition.None
+                            } else {
+                                fadeOut(tween(160)) +
+                                    slideOutHorizontally(
+                                        tween(320, easing = FastOutSlowInEasing)
+                                    ) { -it / 8 }
+                            }
+                        },
+                        popEnterTransition = {
+                            if (initialState.destination.route == "play_screen") {
+                                EnterTransition.None
+                            } else {
+                                fadeIn(tween(220, easing = FastOutSlowInEasing)) +
+                                    slideInHorizontally(
+                                        tween(320, easing = FastOutSlowInEasing)
+                                    ) { -it / 4 }
+                            }
+                        }
+                    ) {
+                        HomeScreen(
+                            musicListViewModel = musicListViewModel,
+                            musicPlayerViewModel = musicPlayerViewModel,
+                            onNavToSettings = {
                                 navController.navigate("playlist_manage_screen") {
                                     launchSingleTop = true
                                 }
-                            }
-                            PlayList(
-                                musicListViewModel = musicListViewModel,
-                                musicPlayerViewModel = musicPlayerViewModel,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Surface(
-                                modifier = Modifier
-                                    .height(90.dp)
-                                    .padding(2.dp),
-                                shape = RoundedCornerShape(15.dp),
-                                color = Color.White
-                            ) {
-                                PlayBar(
-                                    musicListViewModel = musicListViewModel,
-                                    musicPlayerViewModel = musicPlayerViewModel
-                                ) {
-                                    navController.navigate("play_screen") { launchSingleTop = true }
+                            },
+                            onNavToPlayScreen = {
+                                navController.navigate("play_screen") {
+                                    launchSingleTop = true
                                 }
                             }
-                        }
+                        )
                     }
-                    composable("play_screen") {
+                    composable(
+                        route = "play_screen",
+                        enterTransition = {
+                            slideInVertically(
+                                tween(320, easing = FastOutSlowInEasing)
+                            ) { it } + fadeIn(tween(220))
+                        },
+                        exitTransition = {
+                            slideOutVertically(
+                                tween(320, easing = FastOutSlowInEasing)
+                            ) { it } + fadeOut(tween(160))
+                        },
+                        popExitTransition = {
+                            slideOutVertically(
+                                tween(320, easing = FastOutSlowInEasing)
+                            ) { it } + fadeOut(tween(220))
+                        }
+                    ) {
                         PlayScreen { navController.popBackStack() }
                     }
                     composable("playlist_manage_screen") {
@@ -117,8 +154,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
-
-
-

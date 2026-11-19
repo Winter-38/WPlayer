@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches darkColorScheme.background so the launch window never flashes. -->
+    <color name="window_background">#FF131318</color>
+</resources>

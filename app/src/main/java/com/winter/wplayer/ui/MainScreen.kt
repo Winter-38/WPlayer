@@ -7,36 +7,40 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.OptIn
-import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,288 +50,290 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.util.UnstableApi
-import coil3.compose.AsyncImage
-import com.example.compose.AppTheme
 import com.winter.wplayer.IndexHolder
 import com.winter.wplayer.MusicListViewModel
 import com.winter.wplayer.MusicPlayerViewModel
 import com.winter.wplayer.R
+import com.winter.wplayer.room.Song
+import com.winter.wplayer.ui.theme.Dimens
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(musicListViewModel: MusicListViewModel, onNavToSetting: () -> Unit) {
 
-    var mainExpended by remember { mutableStateOf(false) }
-    var sortExpended by remember { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
+    var showSortSheet by rememberSaveable { mutableStateOf(false) }
     var showCreate by remember { mutableStateOf(false) }
     val configPrefs by musicListViewModel.configSort.collectAsStateWithLifecycle()
 
-    Column (
-        modifier = Modifier.background(
-            color = MaterialTheme.colorScheme.secondary
-        )
-    ){
-        Spacer(Modifier.size(20.dp))
-        Row(Modifier.height(65.dp)){
-            Spacer(Modifier.size(10.dp))
+    TopAppBar(
+        title = {
             Text(
-                modifier = Modifier.align(Alignment.CenterVertically),
-                fontSize = 25.sp,
                 text = stringResource(R.string.app_name),
-                color = MaterialTheme.colorScheme.onSecondary
+                style = MaterialTheme.typography.headlineSmall
             )
-            Spacer(Modifier.weight(1f))
-            Box(
-                modifier = Modifier.align(Alignment.CenterVertically)
-            ){
-                IconButton(
-                    onClick = {
-                        mainExpended = true
-                    },
-                    modifier = Modifier
-                        .size(50.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary,
-                        contentColor = MaterialTheme.colorScheme.onSecondary
-                    )
-                ) {
+        },
+        actions = {
+            Box {
+                IconButton(onClick = { menuExpanded = true }) {
                     Icon(
                         painter = painterResource(R.drawable.ic_dots),
                         contentDescription = stringResource(R.string.others)
                     )
                 }
-
                 DropdownMenu(
-                    expanded = mainExpended,
-                    onDismissRequest = { mainExpended = false }
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false }
                 ) {
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.sort)) },
                         onClick = {
-                            mainExpended = false
-                            sortExpended = true
+                            menuExpanded = false
+                            showSortSheet = true
                         }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.create_playlist)) },
                         onClick = {
-                            mainExpended = false
+                            menuExpanded = false
                             showCreate = true
                         }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.settings)) },
                         onClick = {
-                            mainExpended = false
+                            menuExpanded = false
                             onNavToSetting()
                         }
                     )
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.rescan)) },
                         onClick = {
-                            mainExpended = false
+                            menuExpanded = false
                             musicListViewModel.rescan()
                         }
                     )
                 }
-                DropdownMenu(
-                    expanded = sortExpended,
-                    onDismissRequest = { sortExpended = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.title)) },
-                        onClick = {
-                            sortExpended = false
-                            musicListViewModel.setSongOrder("TITLE")
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.artist)) },
-                        onClick = {
-                            sortExpended = false
-                            musicListViewModel.setSongOrder("ARTIST")
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.size)) },
-                        onClick = {
-                            sortExpended = false
-                            musicListViewModel.setSongOrder("SIZE")
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.date_added)) },
-                        onClick = {
-                            sortExpended = false
-                            musicListViewModel.setSongOrder("DATE_ADDED")
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.date_modified)) },
-                        onClick = {
-                            sortExpended = false
-                            musicListViewModel.setSongOrder("DATE_MODIFIED")
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(
-                            if (configPrefs.second == "DESC") stringResource(R.string.sort_asc)
-                                else stringResource(R.string.sort_desc)
-                        ) },
-                        onClick = {
-                            sortExpended = false
-                            musicListViewModel.setSongSort(
-                                if (configPrefs.second == "DESC") "ASC" else "DESC"
-                            )
-                        },
-                        leadingIcon = {
-                            Checkbox(
-                                checked = configPrefs.second == "DESC",
-                                onCheckedChange = null
-                            )
-                        }
-                    )
-                }
-                CreatePlayList(
-                    show = showCreate,
-                    onDismiss = { showCreate = false },
-                    onConfirm = { name ->
-                        musicListViewModel.createPlaylist(name = name, coverUri = null)
-                        showCreate = false
-                    }
-                )
             }
         }
+    )
+
+    if (showSortSheet) {
+        SortSheet(
+            currentOrder = configPrefs.first,
+            currentSort = configPrefs.second,
+            onDismiss = { showSortSheet = false },
+            onOrderChange = { musicListViewModel.setSongOrder(it) },
+            onSortChange = { musicListViewModel.setSongSort(it) }
+        )
     }
+
+    CreatePlayList(
+        show = showCreate,
+        onDismiss = { showCreate = false },
+        onConfirm = { name ->
+            musicListViewModel.createPlaylist(name = name, coverUri = null)
+            showCreate = false
+        }
+    )
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: MusicListViewModel, modifier: Modifier){
-    val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
-    val items by musicListViewModel.mediaItemLists.collectAsStateWithLifecycle()
-    val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
+private fun SortSheet(
+    currentOrder: String,
+    currentSort: String,
+    onDismiss: () -> Unit,
+    onOrderChange: (String) -> Unit,
+    onSortChange: (String) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val fields = listOf(
+        "TITLE" to R.string.title,
+        "ARTIST" to R.string.artist,
+        "SIZE" to R.string.size,
+        "DATE_ADDED" to R.string.date_added,
+        "DATE_MODIFIED" to R.string.date_modified
+    )
 
-    //检测items和controller值变化，防止异步错误
-    /*LaunchedEffect( items, controller) {
-        //musicPlayerViewModel.syncQueue(items)
-    }*/
-
-    LazyColumn(modifier) {
-        itemsIndexed(songs, key = { _, song -> song.songId }) { _, song ->
-            Row(
-                modifier = Modifier
-                    .height(60.dp)
-                    .fillMaxWidth()
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .clickable {
-                        musicPlayerViewModel.playSong(song)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.screenHPadding)
+                .padding(bottom = 24.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.sort),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Spacer(Modifier.height(8.dp))
+            fields.forEach { (order, label) ->
+                ListItem(
+                    headlineContent = { Text(stringResource(label)) },
+                    trailingContent = {
+                        RadioButton(
+                            selected = currentOrder == order,
+                            onClick = { onOrderChange(order) }
+                        )
                     },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(modifier = Modifier.weight(1f))
-                AsyncImage(
-                    model = song.coverUri,
-                    contentDescription = stringResource(R.string.mini_song_cover),
-                    error = painterResource(R.drawable.ic_play_outline),
-                    fallback = painterResource(R.drawable.ic_play_outline),
-                    modifier = Modifier.align(Alignment.CenterVertically).weight(3f)
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
                     modifier = Modifier
-                        .weight(24f),
-                    maxLines = 1,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    text = song.title + " - " + song.artist
+                        .fillMaxWidth()
+                        .clickable { onOrderChange(order) }
                 )
             }
-            Spacer(modifier = Modifier.padding(2.dp))
+            Spacer(Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = currentSort == "ASC",
+                    onClick = { onSortChange("ASC") },
+                    label = { Text(stringResource(R.string.sort_asc)) }
+                )
+                FilterChip(
+                    selected = currentSort == "DESC",
+                    onClick = { onSortChange("DESC") },
+                    label = { Text(stringResource(R.string.sort_desc)) }
+                )
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.confirm))
+                }
+            }
         }
     }
 }
 
-@OptIn(UnstableApi::class)
 @Composable
-fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: MusicListViewModel, onNavToDetail: () -> Unit){
-    val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
+fun HomeScreen(
+    musicListViewModel: MusicListViewModel,
+    musicPlayerViewModel: MusicPlayerViewModel,
+    onNavToSettings: () -> Unit,
+    onNavToPlayScreen: () -> Unit
+) {
     val songs by musicListViewModel.songLists.collectAsStateWithLifecycle()
+    val isPlaying by musicPlayerViewModel.isPlaying.collectAsStateWithLifecycle()
     val currentMediaId by IndexHolder.currentMediaId.collectAsStateWithLifecycle()
     val currentSong = remember(songs, currentMediaId) {
-        songs.firstOrNull{ it.songId.toString() == currentMediaId }
+        songs.firstOrNull { it.songId.toString() == currentMediaId }
     }
-    val coverUri = currentSong?.coverUri ?: R.drawable.ic_play_outline
-    val title = (currentSong?.title ?: stringResource(R.string.unknown_title)) +
-            " - " + (currentSong?.artist ?: stringResource(R.string.unknown_artist))
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Scaffold(
+        topBar = { TopBar(musicListViewModel, onNavToSettings) },
+        bottomBar = {
+            if (currentSong != null) {
+                MiniPlayerBar(
+                    song = currentSong,
+                    isPlaying = isPlaying == true,
+                    onTogglePlay = {
+                        if (isPlaying == true) musicPlayerViewModel.pause()
+                        else musicPlayerViewModel.play()
+                    },
+                    onClick = onNavToPlayScreen
+                )
+            }
+        }
+    ) { innerPadding ->
+        if (songs.isEmpty()) {
+            EmptyState(
+                text = stringResource(R.string.empty_songs),
+                modifier = Modifier.padding(innerPadding)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(
+                    start = Dimens.screenHPadding,
+                    end = Dimens.screenHPadding,
+                    top = 8.dp,
+                    bottom = 8.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(Dimens.listGap)
+            ) {
+                items(songs, key = { it.songId }) { song ->
+                    SongRow(
+                        song = song,
+                        onClick = { musicPlayerViewModel.playSong(song) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiniPlayerBar(
+    song: Song,
+    isPlaying: Boolean,
+    onTogglePlay: () -> Unit,
+    onClick: () -> Unit
+) {
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                onNavToDetail()
-            }
-            .background(
-                color = MaterialTheme.colorScheme.primary
-            )
+            .navigationBarsPadding()
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        tonalElevation = 3.dp,
+        shadowElevation = 3.dp
     ) {
-        Spacer(modifier = Modifier.size(16.dp))
-        AsyncImage(
-            model = coverUri,
-            contentDescription = stringResource(R.string.mini_song_cover),
-            error = painterResource(R.drawable.ic_play_outline),
-            fallback = painterResource(R.drawable.ic_play_outline),
+        Row(
             modifier = Modifier
-                .align(Alignment.CenterVertically)
-                .weight(0.21f)
-        )
-        Spacer(modifier = Modifier.size(8.dp))
-        Text(
-            text = title,
-            maxLines = 1,
-            modifier = Modifier
-                .weight(1f)
-                .basicMarquee(
-                    iterations = Int.MAX_VALUE,
-                    repeatDelayMillis = 500,
-                    initialDelayMillis = 500,
-                    velocity = 30.dp
-                ),
-            color = MaterialTheme.colorScheme.onPrimary
-        )
-        IconButton(
-            onClick = {
-                if (isPlaying == true) {
-                    musicPlayerViewModel.pause()
-                } else {
-                    musicPlayerViewModel.play()
-                }
-            },
-            modifier = Modifier.weight(0.2f),
-            colors = IconButtonDefaults.iconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ),
-            shape = CircleShape
+                .fillMaxWidth()
+                .height(Dimens.miniPlayerHeight)
+                .clickable(onClick = onClick)
+                .padding(start = 12.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = if (isPlaying == true) painterResource(R.drawable.ic_pause)
-                else painterResource(R.drawable.ic_play_outline),
-                contentDescription = stringResource(R.string.play_button)
+            SongCover(
+                coverUri = song.coverUri,
+                contentDescription = stringResource(R.string.mini_song_cover),
+                size = Dimens.coverMini,
+                shape = MaterialTheme.shapes.small
             )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = song.title ?: stringResource(R.string.unknown_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = song.artist ?: stringResource(R.string.unknown_artist),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            FilledIconButton(
+                onClick = onTogglePlay,
+                modifier = Modifier.size(Dimens.touchTarget)
+            ) {
+                Icon(
+                    painter = if (isPlaying) painterResource(R.drawable.ic_pause)
+                    else painterResource(R.drawable.ic_play_outline),
+                    contentDescription = stringResource(
+                        if (isPlaying) R.string.pause_button else R.string.play_button
+                    )
+                )
+            }
         }
-        Spacer(modifier = Modifier.size(16.dp))
     }
 }
 
