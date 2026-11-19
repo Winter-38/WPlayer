@@ -28,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -38,8 +37,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.winter.wplayer.MusicListViewModel
 import com.winter.wplayer.R
-import com.winter.wplayer.room.Song
-import com.winter.wplayer.ui.theme.ListBackgroundColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

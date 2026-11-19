@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,18 +21,21 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.winter.wplayer.R
 import com.winter.wplayer.room.Song
-import com.winter.wplayer.ui.theme.ListBackgroundColor
 
 @Composable
 fun SongItems(songs: List<Song>, modifier: Modifier = Modifier, action: (Int, Song) -> Unit) {
-    LazyColumn(modifier) {
+    LazyColumn(
+        modifier = Modifier.background(
+            color = MaterialTheme.colorScheme.surface
+        )
+    ) {
         itemsIndexed(songs) { index, song ->
             Row(
                 modifier = Modifier
                     .height(60.dp)
                     .fillMaxWidth()
                     .background(
-                        color = ListBackgroundColor,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .clickable {

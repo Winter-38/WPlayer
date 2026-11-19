@@ -6,11 +6,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -21,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
+import com.example.compose.AppTheme
 import com.winter.wplayer.room.AppDataBase
 import com.winter.wplayer.room.PlaylistRepository
 import com.winter.wplayer.ui.PlayScreen
@@ -29,7 +32,6 @@ import com.winter.wplayer.ui.PlayList
 import com.winter.wplayer.ui.PlaylistManageScreen
 import com.winter.wplayer.ui.RequestPermission
 import com.winter.wplayer.ui.TopBar
-import com.winter.wplayer.ui.theme.WPlayerTheme
 
 
 class MainActivity : ComponentActivity() {
@@ -55,7 +57,7 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            WPlayerTheme {
+            AppTheme {
                 LaunchedEffect(Unit) {
                     musicPlayerViewModel.buildController()
 
@@ -66,7 +68,12 @@ class MainActivity : ComponentActivity() {
                 }
                 NavHost(navController, "home") {
                     composable("home") {
-                        Column(modifier = Modifier.fillMaxSize()) {
+                        Column(modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                color = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
                             TopBar(musicListViewModel) {
                                 navController.navigate("playlist_manage_screen") {
                                     launchSingleTop = true

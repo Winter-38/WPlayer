@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
@@ -25,13 +24,19 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,7 +46,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -51,31 +56,33 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import coil3.compose.AsyncImage
-import com.winter.wplayer.ConfigHolder
+import com.example.compose.AppTheme
 import com.winter.wplayer.IndexHolder
 import com.winter.wplayer.MusicListViewModel
 import com.winter.wplayer.MusicPlayerViewModel
 import com.winter.wplayer.R
-import com.winter.wplayer.dataStore
-import com.winter.wplayer.ui.theme.ListBackgroundColor
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 
 @Composable
-fun TopBar(musicListViewModel: MusicListViewModel, onNavToSetting: () -> Unit){
+fun TopBar(musicListViewModel: MusicListViewModel, onNavToSetting: () -> Unit) {
+
     var mainExpended by remember { mutableStateOf(false) }
     var sortExpended by remember { mutableStateOf(false) }
     var showCreate by remember { mutableStateOf(false) }
     val configPrefs by musicListViewModel.configSort.collectAsStateWithLifecycle()
 
-    Column {
+    Column (
+        modifier = Modifier.background(
+            color = MaterialTheme.colorScheme.secondary
+        )
+    ){
         Spacer(Modifier.size(20.dp))
         Row(Modifier.height(65.dp)){
             Spacer(Modifier.size(10.dp))
             Text(
                 modifier = Modifier.align(Alignment.CenterVertically),
                 fontSize = 25.sp,
-                text = stringResource(R.string.app_name)
+                text = stringResource(R.string.app_name),
+                color = MaterialTheme.colorScheme.onSecondary
             )
             Spacer(Modifier.weight(1f))
             Box(
@@ -86,7 +93,11 @@ fun TopBar(musicListViewModel: MusicListViewModel, onNavToSetting: () -> Unit){
                         mainExpended = true
                     },
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(50.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary
+                    )
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_dots),
@@ -205,9 +216,9 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
     val controller by musicPlayerViewModel.controller.collectAsStateWithLifecycle()
 
     //检测items和controller值变化，防止异步错误
-    LaunchedEffect( items, controller) {
+    /*LaunchedEffect( items, controller) {
         //musicPlayerViewModel.syncQueue(items)
-    }
+    }*/
 
     LazyColumn(modifier) {
         itemsIndexed(songs, key = { _, song -> song.songId }) { _, song ->
@@ -216,7 +227,7 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
                     .height(60.dp)
                     .fillMaxWidth()
                     .background(
-                        color = ListBackgroundColor,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .clickable {
@@ -238,6 +249,7 @@ fun PlayList(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Mus
                     modifier = Modifier
                         .weight(24f),
                     maxLines = 1,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     text = song.title + " - " + song.artist
                 )
             }
@@ -266,6 +278,9 @@ fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Musi
             .clickable {
                 onNavToDetail()
             }
+            .background(
+                color = MaterialTheme.colorScheme.primary
+            )
     ) {
         Spacer(modifier = Modifier.size(16.dp))
         AsyncImage(
@@ -288,7 +303,8 @@ fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Musi
                     repeatDelayMillis = 500,
                     initialDelayMillis = 500,
                     velocity = 30.dp
-                )
+                ),
+            color = MaterialTheme.colorScheme.onPrimary
         )
         IconButton(
             onClick = {
@@ -299,6 +315,10 @@ fun PlayBar(musicPlayerViewModel: MusicPlayerViewModel, musicListViewModel: Musi
                 }
             },
             modifier = Modifier.weight(0.2f),
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ),
             shape = CircleShape
         ) {
             Icon(
